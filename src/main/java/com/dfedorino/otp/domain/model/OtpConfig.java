@@ -1,4 +1,4 @@
-package com.dfedorino.otp.model;
+package com.dfedorino.otp.domain.model;
 
 public record OtpConfig(
     Long id,

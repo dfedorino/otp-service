@@ -1,14 +1,12 @@
-CREATE TYPE user_role AS ENUM ('ADMIN', 'USER');
-
-CREATE TABLE users
+CREATE TABLE IF NOT EXISTS users
 (
     id       BIGSERIAL PRIMARY KEY,
     login    VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL, -- BCrypt hash
-    role     user_role    NOT NULL
+    password VARCHAR(255) NOT NULL,
+    "role"   VARCHAR(5)   NOT NULL -- IN ('ADMIN', 'USER')
 );
 
-CREATE TABLE otp_config
+CREATE TABLE IF NOT EXISTS otp_config
 (
     id          BIGSERIAL PRIMARY KEY,
     code_length INT NOT NULL DEFAULT 6,
@@ -17,15 +15,13 @@ CREATE TABLE otp_config
 
 INSERT INTO otp_config (code_length, ttl_seconds) VALUES (6, 300);
 
-CREATE TYPE otp_status AS ENUM ('ACTIVE', 'EXPIRED', 'USED');
-
-CREATE TABLE otp_codes
+CREATE TABLE IF NOT EXISTS otp_codes
 (
     id           BIGSERIAL PRIMARY KEY,
     user_id      BIGINT       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     operation_id VARCHAR(255) NOT NULL,
     code         VARCHAR(20)  NOT NULL,
-    status       otp_status   NOT NULL DEFAULT 'ACTIVE',
+    status       VARCHAR(7)   NOT NULL, -- IN ('ACTIVE', 'EXPIRED', 'USED'),
     created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
     expires_at   TIMESTAMP    NOT NULL
 );

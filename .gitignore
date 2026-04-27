@@ -9,3 +9,6 @@ logs
 
 # Classes
 target
+
+# Credentials
+.env

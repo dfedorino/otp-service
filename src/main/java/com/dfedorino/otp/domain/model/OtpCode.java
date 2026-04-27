@@ -1,6 +1,6 @@
-package com.dfedorino.otp.model;
+package com.dfedorino.otp.domain.model;
 
-import com.dfedorino.otp.model.enums.OtpStatus;
+import com.dfedorino.otp.domain.enums.OtpStatus;
 import java.time.LocalDateTime;
 
 public record OtpCode(
