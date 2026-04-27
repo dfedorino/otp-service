@@ -26,5 +26,5 @@ CREATE TABLE IF NOT EXISTS otp_codes
     expires_at   TIMESTAMP    NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_otp_codes_user_id ON otp_codes(user_id);
-CREATE INDEX IF NOT EXISTS idx_otp_codes_expires ON otp_codes(expires_at);
+CREATE INDEX IF NOT EXISTS idx_otp_codes_user_id_operation_id ON otp_codes(user_id, operation_id, code);
+CREATE INDEX IF NOT EXISTS idx_otp_codes_expires_status ON otp_codes(expires_at, status);
