@@ -5,6 +5,7 @@ import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.repository.utils.ResultSetMapper;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +17,7 @@ public class JdbcUserRepository implements UserRepository {
     private static final String SELECT_BY_ID = "SELECT id, login, password, role FROM users WHERE id = ?";
     private static final String DELETE_BY_ID = "DELETE FROM users WHERE id = ?";
     private static final String SELECT_ADMIN_EXISTS = "SELECT EXISTS(SELECT 1 FROM users WHERE role = 'ADMIN')";
+    private static final String SELECT_ALL_USERS = "SELECT id, login, password, role FROM users";
 
     private static final ResultSetMapper<User> USER_RESULT_SET_MAPPER = rs -> new User(
         rs.getLong("id"),
@@ -48,10 +50,16 @@ public class JdbcUserRepository implements UserRepository {
         log.debug("Delete user by id: {}", id);
         return Queries.update(DELETE_BY_ID, id) > 0;
     }
-    
+
     @Override
     public boolean existsAdmin() {
         log.debug("Checking if admin user exists");
         return Queries.query(SELECT_ADMIN_EXISTS, rs -> rs.getBoolean(1)).stream().findAny().orElse(false);
+    }
+    
+    @Override
+    public List<User> findAll() {
+        log.debug("Retrieving all users");
+        return Queries.query(SELECT_ALL_USERS, USER_RESULT_SET_MAPPER);
     }
 }

@@ -1,0 +1,62 @@
+package com.dfedorino.otp.service.impl;
+
+import com.dfedorino.otp.domain.enums.Role;
+import com.dfedorino.otp.domain.model.OtpConfig;
+import com.dfedorino.otp.domain.model.User;
+import com.dfedorino.otp.repository.OtpConfigRepository;
+import com.dfedorino.otp.repository.OtpRepository;
+import com.dfedorino.otp.repository.UserRepository;
+import com.dfedorino.otp.repository.transaction.Transactional;
+import com.dfedorino.otp.service.AdminService;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+public class AdminServiceImpl implements AdminService {
+
+    private final UserRepository userRepository;
+    private final OtpRepository otpRepository;
+    private final OtpConfigRepository otpConfigRepository;
+
+    @Override
+    @Transactional
+    public List<User> getUsers() {
+        return userRepository.findAll()
+            .stream()
+            .filter(user -> user.role() != Role.ADMIN)
+            .collect(Collectors.toList());
+    }
+
+
+    @Override
+    @Transactional
+    public OtpConfig updateOtpConfig(OtpConfig config) {
+        // Note: config validation might be added here in practice but not required per task
+        otpConfigRepository.update(config);
+        return otpConfigRepository.findFirst()
+            .orElseThrow();
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(long userId) {
+        // Check if user exists
+        var userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        // Check if user is admin
+        var user = userOpt.get();
+        if (user.role() == Role.ADMIN) {
+            throw new IllegalStateException("Cannot delete admin user");
+        }
+
+        // Delete OTP codes for user
+        otpRepository.deleteByUserId(userId);
+
+        // Delete user
+        userRepository.deleteById(userId);
+    }
+}

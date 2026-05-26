@@ -2,6 +2,7 @@ package com.dfedorino.otp.repository;
 
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.User;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -13,6 +14,8 @@ public interface UserRepository {
     Optional<User> findById(long id);
 
     boolean deleteById(long id);
-    
+
     boolean existsAdmin();
+    
+    List<User> findAll();
 }

@@ -2,7 +2,9 @@ package com.dfedorino.otp.service.config;
 
 import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.repository.transaction.TransactionalProxy;
+import com.dfedorino.otp.service.AdminService;
 import com.dfedorino.otp.service.AuthService;
+import com.dfedorino.otp.service.impl.AdminServiceImpl;
 import com.dfedorino.otp.service.impl.DefaultAuthService;
 import com.dfedorino.otp.service.impl.DefaultJwtService;
 import com.dfedorino.otp.util.ApplicationPropertiesUtil;
@@ -26,5 +28,14 @@ public class ServiceConfig {
         );
         return TransactionalProxy.create(impl, txManager);
     }
-
+    
+    public AdminService adminService() {
+        var txManager = repositoryConfig.transactionManager();
+        AdminService impl = new AdminServiceImpl(
+            repositoryConfig.userRepository(),
+            repositoryConfig.otpRepository(),
+            repositoryConfig.otpConfigRepository()
+        );
+        return TransactionalProxy.create(impl, txManager);
+    }
 }
