@@ -1,21 +1,22 @@
 package com.dfedorino.otp.service;
 
 import com.dfedorino.otp.domain.enums.Role;
+import com.dfedorino.otp.service.impl.DefaultJwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
 
-class JwtServiceTest {
+class DefaultJwtServiceTest {
 
     private static final String SECRET = "this_is_a_very_long_secret_key_for_jwt_hmac_256";
     private static final long EXPIRATION_SECONDS = 3600;
     
-    private JwtService jwtService;
+    private DefaultJwtService jwtService;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService(SECRET, EXPIRATION_SECONDS);
+        jwtService = new DefaultJwtService(SECRET, EXPIRATION_SECONDS);
     }
 
     @Test
@@ -89,7 +90,7 @@ class JwtServiceTest {
     @Test
     void should_return_false_for_expired_token() throws InterruptedException {
         // Arrange
-        JwtService shortExpirationJwtService = new JwtService(SECRET, 1);
+        DefaultJwtService shortExpirationJwtService = new DefaultJwtService(SECRET, 1);
         String token = shortExpirationJwtService.generateToken(
             1L,
             "john",
@@ -116,7 +117,7 @@ class JwtServiceTest {
         );
 
         // Create another JwtUtil with a different secret
-        JwtService anotherJwtService = new JwtService("different_secret_key_that_is_long_enough_12345", EXPIRATION_SECONDS);
+        DefaultJwtService anotherJwtService = new DefaultJwtService("different_secret_key_that_is_long_enough_12345", EXPIRATION_SECONDS);
 
         // Act
         boolean valid = anotherJwtService.isTokenValid(token);

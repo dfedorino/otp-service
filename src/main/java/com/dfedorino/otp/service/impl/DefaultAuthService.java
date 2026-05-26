@@ -1,18 +1,19 @@
-package com.dfedorino.otp.service;
+package com.dfedorino.otp.service.impl;
 
 import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.repository.UserRepository;
+import com.dfedorino.otp.service.AuthService;
 import com.dfedorino.otp.util.PasswordUtil;
 import com.dfedorino.otp.repository.transaction.Transactional;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService {
+public class DefaultAuthService implements AuthService {
     
     private final UserRepository userRepository;
-    private final JwtService jwtUtil;
+    private final DefaultJwtService jwtUtil;
     
     @Override
     @Transactional

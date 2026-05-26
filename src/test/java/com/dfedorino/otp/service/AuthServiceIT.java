@@ -6,6 +6,7 @@ import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.repository.transaction.TransactionManager;
 import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.service.config.ServiceConfig;
+import com.dfedorino.otp.service.impl.DefaultJwtService;
 import com.dfedorino.otp.util.PasswordUtil;
 import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.domain.enums.Role;
@@ -24,7 +25,7 @@ public class AuthServiceIT extends AbstractIntegrationTest {
     private TransactionManager tx;
     private AuthService authService;
     private UserRepository userRepository;
-    private JwtService jwtUtil;
+    private DefaultJwtService jwtUtil;
     
     @BeforeEach
     public void setUp() {
