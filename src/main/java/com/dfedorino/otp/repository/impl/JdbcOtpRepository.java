@@ -3,12 +3,10 @@ package com.dfedorino.otp.repository.impl;
 import com.dfedorino.otp.domain.enums.OtpStatus;
 import com.dfedorino.otp.domain.model.OtpCode;
 import com.dfedorino.otp.repository.OtpRepository;
-import com.dfedorino.otp.repository.datasource.DataSource;
 import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.repository.utils.ResultSetMapper;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,12 +32,6 @@ public class JdbcOtpRepository implements OtpRepository {
             throw new RuntimeException(e);
         }
     };
-
-    private final DataSource dataSource;
-
-    public JdbcOtpRepository(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
 
     @Override
     public boolean save(long userId, String operationId, String code, OtpStatus status, Instant expiresAt) {
