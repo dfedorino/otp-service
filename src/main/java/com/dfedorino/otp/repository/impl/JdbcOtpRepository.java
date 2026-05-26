@@ -16,6 +16,7 @@ public class JdbcOtpRepository implements OtpRepository {
     private static final String INSERT_OTP_CODE = "INSERT INTO otp_codes (user_id, operation_id, code, status, created_at, expires_at) VALUES (?, ?, ?, ?, NOW(), ?)";
     private static final String SELECT_OTP_CODE = "SELECT id, user_id, operation_id, code, status, created_at, expires_at FROM otp_codes WHERE user_id = ? AND operation_id = ? AND code = ?";
     private static final String DELETE_ACTIVE_OTP_CODES = "DELETE FROM otp_codes WHERE status = 'ACTIVE' AND expires_at < ?";
+    private static final String DELETE_OTP_CODES_BY_USER_ID = "DELETE FROM otp_codes WHERE user_id = ?";
 
     private static final ResultSetMapper<OtpCode> OTP_CODE_RESULT_SET_MAPPER = rs -> {
         try {
@@ -53,5 +54,12 @@ public class JdbcOtpRepository implements OtpRepository {
         log.debug("Deleting active OTP codes that have expired before: {}", expiresAt);
 
         return Queries.update(DELETE_ACTIVE_OTP_CODES, Timestamp.from(expiresAt)) > 0;
+    }
+    
+    @Override
+    public int deleteByUserId(long userId) {
+        log.debug("Deleting all OTP codes for user_id: {}", userId);
+        
+        return Queries.update(DELETE_OTP_CODES_BY_USER_ID, userId);
     }
 }

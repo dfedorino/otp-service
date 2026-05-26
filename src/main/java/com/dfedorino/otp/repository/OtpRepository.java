@@ -12,4 +12,6 @@ public interface OtpRepository {
     Optional<OtpCode> findByUserIdAndOperationIdAndCode(long userId, String operationId, String code);
 
     boolean deleteActive(Instant expiresAt);
+    
+    int deleteByUserId(long userId);
 }

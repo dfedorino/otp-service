@@ -11,6 +11,7 @@ import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.domain.enums.Role;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,9 +47,9 @@ public class OtpRepositoryIT extends AbstractIntegrationTest {
     void should_save_otp_code() {
         tx.executeWithoutResult(() -> {
             // Create a user using SQL (no duplicates)
-            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)", 
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
                 "testuser", "hashedPassword", Role.USER.name());
-            
+
             Instant expiresAt = Instant.now().plusSeconds(300);
 
             // Save OTP code with all fields
@@ -92,13 +93,13 @@ public class OtpRepositoryIT extends AbstractIntegrationTest {
     void should_delete_expired_otp_codes() {
         tx.executeWithoutResult(() -> {
             // Create users with unique logins to avoid constraint violations
-            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)", 
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
                 "user1", "hashedPassword", Role.USER.name());
-            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)", 
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
                 "user2", "hashedPassword", Role.USER.name());
-            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)", 
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
                 "user3", "hashedPassword", Role.USER.name());
-            
+
             // Save 3 OTP codes: 2 expired (expiresAt in past), 1 active (expiresAt in future)
             Instant pastExpiresAt = Instant.now().minusSeconds(300);
             Instant futureExpiresAt = Instant.now().plusSeconds(300);
@@ -122,12 +123,12 @@ public class OtpRepositoryIT extends AbstractIntegrationTest {
     @Test
     void should_not_delete_used_or_expired_status_codes() {
         tx.executeWithoutResult(() -> {
-            // Create users with unique logins 
-            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)", 
+            // Create users with unique logins
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
                 "user1", "hashedPassword", Role.USER.name());
-            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)", 
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
                 "user2", "hashedPassword", Role.USER.name());
-            
+
             // Save codes with status USED and EXPIRED
             Instant expiresAt = Instant.now().minusSeconds(300); // Already expired
 
@@ -146,6 +147,57 @@ public class OtpRepositoryIT extends AbstractIntegrationTest {
 
             assertThat(usedCode).isPresent();
             assertThat(expiredCode).isPresent();
+        });
+    }
+    
+    @Test
+    void should_delete_all_otp_codes_by_user_id() {
+        tx.executeWithoutResult(() -> {
+            // Create two users for testing
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
+                "user1", "hashedPassword", Role.USER.name());
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
+                "user2", "hashedPassword", Role.USER.name());
+
+            // Insert 3 OTP codes for user 1 with different statuses
+            Instant expiresAt = Instant.now().plusSeconds(300);
+            
+            otpRepository.save(1L, "operation1", "111111", OtpStatus.ACTIVE, expiresAt);
+            otpRepository.save(1L, "operation2", "222222", OtpStatus.USED, expiresAt);
+            otpRepository.save(1L, "operation3", "333333", OtpStatus.EXPIRED, expiresAt);
+            
+            // Insert 3 OTP codes for user 2 with different statuses
+            otpRepository.save(2L, "operation4", "444444", OtpStatus.ACTIVE, expiresAt);
+            otpRepository.save(2L, "operation5", "555555", OtpStatus.USED, expiresAt);
+            otpRepository.save(2L, "operation6", "666666", OtpStatus.EXPIRED, expiresAt);
+
+            // Act
+            int deleted = otpRepository.deleteByUserId(1L);
+
+            // Assert
+            assertThat(deleted).isEqualTo(3);
+            
+            // Verify remaining OTP records belong only to user 2 by checking counts
+            int countForUser2 = Queries.query(
+                "SELECT COUNT(*) FROM otp_codes WHERE user_id = ?",
+                rs -> rs.getInt(1),
+                2L
+            ).getFirst();
+            
+            assertThat(countForUser2).isEqualTo(3);
+        });
+    }
+    
+    @Test
+    void should_return_zero_when_user_has_no_otp_codes() {
+        tx.executeWithoutResult(() -> {
+            // Ensure user 99 has no OTP codes
+            
+            // Act
+            int deleted = otpRepository.deleteByUserId(99L);
+
+            // Assert
+            assertThat(deleted).isZero();
         });
     }
 }
