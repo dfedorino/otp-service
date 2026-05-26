@@ -15,6 +15,7 @@ public class JdbcUserRepository implements UserRepository {
     private static final String SELECT_BY_LOGIN = "SELECT id, login, password, role FROM users WHERE login = ?";
     private static final String SELECT_BY_ID = "SELECT id, login, password, role FROM users WHERE id = ?";
     private static final String DELETE_BY_ID = "DELETE FROM users WHERE id = ?";
+    private static final String SELECT_ADMIN_EXISTS = "SELECT EXISTS(SELECT 1 FROM users WHERE role = 'ADMIN')";
 
     private static final ResultSetMapper<User> USER_RESULT_SET_MAPPER = rs -> new User(
         rs.getLong("id"),
@@ -46,5 +47,11 @@ public class JdbcUserRepository implements UserRepository {
     public boolean deleteById(long id) {
         log.debug("Delete user by id: {}", id);
         return Queries.update(DELETE_BY_ID, id) > 0;
+    }
+    
+    @Override
+    public boolean existsAdmin() {
+        log.debug("Checking if admin user exists");
+        return Queries.query(SELECT_ADMIN_EXISTS, rs -> rs.getBoolean(1)).stream().findAny().orElse(false);
     }
 }

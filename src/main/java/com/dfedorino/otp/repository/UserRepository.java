@@ -13,4 +13,6 @@ public interface UserRepository {
     Optional<User> findById(long id);
 
     boolean deleteById(long id);
+    
+    boolean existsAdmin();
 }

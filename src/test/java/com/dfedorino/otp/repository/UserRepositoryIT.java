@@ -64,4 +64,76 @@ public class UserRepositoryIT extends AbstractIntegrationTest {
             assertThat(userRepository.findById(1L)).isEmpty();
         });
     }
+    
+    @Test
+    void should_return_true_when_admin_exists() {
+        tx.executeWithoutResult(() -> {
+            // Arrange
+            assertThat(userRepository.save(
+                "admin",
+                "hashedPassword",
+                Role.ADMIN
+            )).isTrue();
+            
+            // Act
+            boolean exists = userRepository.existsAdmin();
+            
+            // Assert
+            assertThat(exists).isTrue();
+        });
+    }
+    
+    @Test
+    void should_return_false_when_admin_does_not_exist() {
+        tx.executeWithoutResult(() -> {
+            // Arrange
+            assertThat(userRepository.save(
+                "user1",
+                "hashedPassword",
+                Role.USER
+            )).isTrue();
+            
+            assertThat(userRepository.save(
+                "user2",
+                "hashedPassword",
+                Role.USER
+            )).isTrue();
+            
+            // Act
+            boolean exists = userRepository.existsAdmin();
+            
+            // Assert
+            assertThat(exists).isFalse();
+        });
+    }
+    
+    @Test
+    void should_ignore_regular_users_when_checking_admin_existence() {
+        tx.executeWithoutResult(() -> {
+            // Arrange
+            assertThat(userRepository.save(
+                "user1",
+                "hashedPassword",
+                Role.USER
+            )).isTrue();
+            
+            assertThat(userRepository.save(
+                "user2",
+                "hashedPassword",
+                Role.USER
+            )).isTrue();
+            
+            assertThat(userRepository.save(
+                "user3",
+                "hashedPassword",
+                Role.USER
+            )).isTrue();
+            
+            // Act
+            boolean exists = userRepository.existsAdmin();
+            
+            // Assert
+            assertThat(exists).isFalse();
+        });
+    }
 }
