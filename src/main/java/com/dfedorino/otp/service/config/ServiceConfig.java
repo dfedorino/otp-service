@@ -10,9 +10,11 @@ import com.dfedorino.otp.service.impl.AdminServiceImpl;
 import com.dfedorino.otp.service.impl.DefaultAuthService;
 import com.dfedorino.otp.service.impl.DefaultJwtService;
 import com.dfedorino.otp.service.impl.DefaultUserService;
+import com.dfedorino.otp.service.internal.ExpirationService;
 import com.dfedorino.otp.util.ApplicationPropertiesUtil;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
 
 public class ServiceConfig {
     private final RepositoryConfig repositoryConfig = new RepositoryConfig();
@@ -50,6 +52,16 @@ public class ServiceConfig {
             repositoryConfig.userRepository(),
             repositoryConfig.otpRepository(),
             repositoryConfig.otpConfigRepository()
+        );
+        return TransactionalProxy.create(impl, txManager);
+    }
+
+    public ExpirationService expirationService() {
+        var txManager = repositoryConfig.transactionManager();
+        ExpirationService impl = new ExpirationService(
+            Executors.newSingleThreadScheduledExecutor(),
+            repositoryConfig.otpRepository(),
+            props
         );
         return TransactionalProxy.create(impl, txManager);
     }

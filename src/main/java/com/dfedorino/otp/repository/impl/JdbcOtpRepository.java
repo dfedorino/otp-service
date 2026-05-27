@@ -51,10 +51,10 @@ public class JdbcOtpRepository implements OtpRepository {
     }
 
     @Override
-    public boolean deleteActive(Instant expiresAt) {
+    public long deleteActive(Instant expiresAt) {
         log.debug("Deleting active OTP codes that have expired before: {}", expiresAt);
 
-        return Queries.update(DELETE_ACTIVE_OTP_CODES, Timestamp.from(expiresAt)) > 0;
+        return Queries.update(DELETE_ACTIVE_OTP_CODES, Timestamp.from(expiresAt));
     }
 
     @Override

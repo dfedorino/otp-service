@@ -14,11 +14,11 @@
 - PasswordUtil (BCrypt wrapper)
 - AuthService (register, login → JWT)
 - AdminService (list users, delete user, update OTP config)
+- UserService (generate, deliver, validate, store OTP in a file)
+- OTP Expiration Service (mark codes as expired once per interval)
 
 
 ## Planned
-- UserService (generate, deliver, validate, store OTP in a file)
-- OTP Expiration Service (mark codes as expired once per interval)
 - EmailNotificationService (deliver via email)
 - SmsNotificationService (deliver via sms)
 - TelegramNotificationService (deliver via telegram bot)
