@@ -192,12 +192,61 @@ public class OtpRepositoryIT extends AbstractIntegrationTest {
     void should_return_zero_when_user_has_no_otp_codes() {
         tx.executeWithoutResult(() -> {
             // Ensure user 99 has no OTP codes
-            
+
             // Act
             int deleted = otpRepository.deleteByUserId(99L);
 
             // Assert
             assertThat(deleted).isZero();
+        });
+    }
+    
+    @Test
+    void should_update_otp_status_by_id() {
+        tx.executeWithoutResult(() -> {
+            // Create a user for testing
+            Queries.update("INSERT INTO users (login, password, role) VALUES (?, ?, ?)",
+                "testuser", "hashedPassword", Role.USER.name());
+
+            // Save an OTP code with ACTIVE status
+            Instant expiresAt = Instant.now().plusSeconds(300);
+            boolean saved = otpRepository.save(
+                1L,
+                "reset-password",
+                "123456",
+                OtpStatus.ACTIVE,
+                expiresAt
+            );
+
+            assertThat(saved).isTrue();
+
+            // Retrieve the OTP code to get its ID
+            Optional<OtpCode> retrieved = otpRepository.findByUserIdAndOperationIdAndCode(1L, "reset-password", "123456");
+            assertThat(retrieved).isPresent();
+            
+            OtpCode otpCode = retrieved.get();
+            long id = otpCode.id();
+            assertThat(otpCode.status()).isEqualTo(OtpStatus.ACTIVE);
+
+            // Update the status to USED
+            boolean updated = otpRepository.updateStatusById(id, OtpStatus.USED);
+            assertThat(updated).isTrue();
+
+            // Verify the status was updated
+            Optional<OtpCode> updatedCode = otpRepository.findByUserIdAndOperationIdAndCode(1L, "reset-password", "123456");
+            assertThat(updatedCode).isPresent();
+            assertThat(updatedCode.get().status()).isEqualTo(OtpStatus.USED);
+        });
+    }
+
+    @Test
+    void should_return_false_when_updating_nonexistent_otp_status() {
+        tx.executeWithoutResult(() -> {
+            // Try to update status for a non-existent OTP code ID
+            boolean updated = otpRepository.updateStatusById(999L, OtpStatus.USED);
+            
+            // Should return false since no record exists
+            assertThat(updated).isFalse();
         });
     }
 }
