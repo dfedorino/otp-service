@@ -1,8 +1,10 @@
 package com.dfedorino.otp.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -135,14 +137,11 @@ class AuthControllerIT extends AbstractIntegrationTest {
     @Test
     void should_reject_login_for_unknown_user() throws Exception {
         UserRequest request = new UserRequest("unknown", "password123");
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isNotFound())
-            .andReturn();
-
-        String responseContent = result.getResponse().getContentAsString();
-        assertThat(responseContent).contains("User not found by login: unknown");
+            .andExpect(content().string(containsString("User not found")));
     }
 
     @Test

@@ -1,12 +1,12 @@
 package com.dfedorino.otp.service;
 
 import com.dfedorino.otp.domain.model.OtpConfig;
-import com.dfedorino.otp.domain.model.User;
+import com.dfedorino.otp.service.dto.UserDto;
 import java.util.List;
 
 public interface AdminService {
 
-    List<User> getUsers();
+    List<UserDto> getUsers();
 
     void deleteUser(long userId);
 

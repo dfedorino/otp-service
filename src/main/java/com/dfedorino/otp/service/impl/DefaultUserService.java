@@ -11,8 +11,8 @@ import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.service.UserService;
 import com.dfedorino.otp.repository.transaction.Transactional;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -42,10 +42,9 @@ public class DefaultUserService implements UserService {
 
         String code = RandomStringUtils.insecure().nextNumeric(config.codeLength());
 
-        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(config.ttlSeconds());
+        Instant expiresAt = Instant.now().plusSeconds(config.ttlSeconds());
 
-        otpRepository.save(userId, operationId, code, OtpStatus.ACTIVE, expiresAt.toInstant(
-            ZoneOffset.UTC));
+        otpRepository.save(userId, operationId, code, OtpStatus.ACTIVE, expiresAt);
 
         OtpCodeDto otpCodeDto = new OtpCodeDto(userId, operationId, code, OtpStatus.ACTIVE,
             expiresAt);

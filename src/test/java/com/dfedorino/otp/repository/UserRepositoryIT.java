@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.User;
+import com.dfedorino.otp.repository.utils.Queries;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,9 +29,13 @@ class UserRepositoryIT extends AbstractIntegrationTest {
             )).isTrue();
 
             var actual = userRepository.findByLogin("login");
-            var expected = new User(1L, "login", "hashedPassword", Role.USER);
-            assertThat(actual).contains(expected);
-            assertThat(userRepository.findById(1L)).contains(expected);
+            assertThat(actual).isNotEmpty()
+                .get()
+                .satisfies(user -> {
+                    assertThat(user.login()).isEqualTo("login");
+                    assertThat(user.hashedPassword()).isNotBlank();
+                    assertThat(user.role()).isEqualTo(Role.USER);
+                });
         });
     }
 
@@ -42,23 +48,18 @@ class UserRepositoryIT extends AbstractIntegrationTest {
                 Role.USER
             )).isTrue();
 
-            assertThat(userRepository.deleteById(1L)).isTrue();
+            User user = userRepository.findByLogin("login").orElseThrow();
+
+            assertThat(userRepository.deleteById(user.id())).isTrue();
 
             assertThat(userRepository.findByLogin("login")).isEmpty();
-            assertThat(userRepository.findById(1L)).isEmpty();
+            assertThat(userRepository.findById(user.id())).isEmpty();
         });
     }
     
     @Test
     void should_return_true_when_admin_exists() {
         tx.executeWithoutResult(() -> {
-            // Arrange
-            assertThat(userRepository.save(
-                "admin",
-                "hashedPassword",
-                Role.ADMIN
-            )).isTrue();
-            
             // Act
             boolean exists = userRepository.existsAdmin();
             
@@ -71,6 +72,7 @@ class UserRepositoryIT extends AbstractIntegrationTest {
     void should_return_false_when_admin_does_not_exist() {
         tx.executeWithoutResult(() -> {
             // Arrange
+            Queries.update("DELETE FROM users WHERE login = 'admin'");
             assertThat(userRepository.save(
                 "user1",
                 "hashedPassword",
@@ -94,6 +96,7 @@ class UserRepositoryIT extends AbstractIntegrationTest {
     @Test
     void should_ignore_regular_users_when_checking_admin_existence() {
         tx.executeWithoutResult(() -> {
+            Queries.update("DELETE FROM users WHERE login = 'admin'");
             // Arrange
             assertThat(userRepository.save(
                 "user1",

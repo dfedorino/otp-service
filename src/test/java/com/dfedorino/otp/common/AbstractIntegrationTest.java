@@ -30,6 +30,10 @@ public abstract class AbstractIntegrationTest {
             () -> {
                 Queries.update("TRUNCATE TABLE otp_codes RESTART IDENTITY CASCADE");
                 Queries.update("TRUNCATE TABLE users RESTART IDENTITY CASCADE");
+                Queries.update("""
+                INSERT INTO users (login, password, "role")
+                VALUES ('admin', '$2a$04$i0o7w7IQsZQuuGL..Z6G9uGbG.PzrwKUAMkfA8pxs355ZgwQpfNIi', 'ADMIN');
+                """);
                 Queries.update("UPDATE otp_config SET code_length = 6, ttl_seconds = 300");
             });
         dataSource.close();

@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS users
     "role"   VARCHAR(5)   NOT NULL -- IN ('ADMIN', 'USER')
 );
 
+INSERT INTO users (login, password, "role")
+VALUES ('admin', '$2a$04$i0o7w7IQsZQuuGL..Z6G9uGbG.PzrwKUAMkfA8pxs355ZgwQpfNIi', 'ADMIN');
+
 CREATE TABLE IF NOT EXISTS otp_config
 (
     id          BIGSERIAL PRIMARY KEY,

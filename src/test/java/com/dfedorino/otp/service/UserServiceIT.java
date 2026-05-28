@@ -12,7 +12,7 @@ import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +69,7 @@ class UserServiceIT extends AbstractIntegrationTest {
         assertThat(otp.status()).isEqualTo(OtpStatus.ACTIVE);
         
         // Verify that expiration is within the default TTL (we expect around 300 seconds)
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         assertThat(otp.expiresAt()).isAfter(now);
         assertThat(otp.expiresAt()).isBefore(now.plusSeconds(310)); // Allow some tolerance
 

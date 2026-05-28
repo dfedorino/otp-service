@@ -2,18 +2,18 @@ package com.dfedorino.otp.service.impl;
 
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.OtpConfig;
-import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.repository.OtpConfigRepository;
 import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.repository.transaction.Transactional;
 import com.dfedorino.otp.service.AdminService;
+import com.dfedorino.otp.service.dto.UserDto;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AdminServiceImpl implements AdminService {
+public class DefaultAdminService implements AdminService {
 
     private final UserRepository userRepository;
     private final OtpRepository otpRepository;
@@ -21,10 +21,11 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional
-    public List<User> getUsers() {
+    public List<UserDto> getUsers() {
         return userRepository.findAll()
             .stream()
             .filter(user -> user.role() != Role.ADMIN)
+            .map(user -> new UserDto(user.id(), user.login(), user.role()))
             .collect(Collectors.toList());
     }
 

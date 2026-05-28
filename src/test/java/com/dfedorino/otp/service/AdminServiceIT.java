@@ -7,12 +7,12 @@ import com.dfedorino.otp.domain.enums.OtpStatus;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.exception.TransactionException;
 import com.dfedorino.otp.domain.model.OtpConfig;
-import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.OtpConfigRepository;
 import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.service.config.ServiceConfig;
+import com.dfedorino.otp.service.dto.UserDto;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ class AdminServiceIT extends AbstractIntegrationTest {
         });
 
         // Act
-        List<User> users = adminService.getUsers();
+        List<UserDto> users = adminService.getUsers();
 
         // Assert
         assertThat(users)
@@ -96,12 +96,7 @@ class AdminServiceIT extends AbstractIntegrationTest {
     @Test
     void should_reject_admin_deletion() {
         // Arrange
-        long adminId = tx.execute(() -> {
-            userRepository.save("admin", "hashed", Role.ADMIN);
-            return userRepository.findByLogin("admin")
-                .orElseThrow()
-                .id();
-        });
+        long adminId = tx.execute(() -> userRepository.findByLogin("admin").orElseThrow().id());
 
         // Act + Assert - Unwrap the TransactionException to check actual cause
         assertThatThrownBy(() ->

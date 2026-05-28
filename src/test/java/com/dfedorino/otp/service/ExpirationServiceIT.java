@@ -1,6 +1,7 @@
 package com.dfedorino.otp.service;
 
 import com.dfedorino.otp.domain.enums.OtpStatus;
+import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.OtpCode;
 import com.dfedorino.otp.domain.model.OtpConfig;
 import com.dfedorino.otp.domain.model.User;
@@ -65,7 +66,7 @@ class ExpirationServiceIT extends AbstractIntegrationTest {
     void should_delete_expired_otp_codes() throws InterruptedException {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", com.dfedorino.otp.domain.enums.Role.USER);
+            userRepository.save("test@example.com", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();
@@ -94,7 +95,7 @@ class ExpirationServiceIT extends AbstractIntegrationTest {
     void should_not_delete_active_otp_codes() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", com.dfedorino.otp.domain.enums.Role.USER);
+            userRepository.save("test@example.com", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();

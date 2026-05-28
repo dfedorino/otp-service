@@ -10,7 +10,7 @@ import com.dfedorino.otp.repository.transaction.TransactionalProxy;
 import com.dfedorino.otp.service.AdminService;
 import com.dfedorino.otp.service.AuthService;
 import com.dfedorino.otp.service.UserService;
-import com.dfedorino.otp.service.impl.AdminServiceImpl;
+import com.dfedorino.otp.service.impl.DefaultAdminService;
 import com.dfedorino.otp.service.impl.DefaultAuthService;
 import com.dfedorino.otp.service.impl.DefaultJwtService;
 import com.dfedorino.otp.service.impl.DefaultUserService;
@@ -72,7 +72,7 @@ public class ServiceConfig {
         OtpRepository otpRepository,
         OtpConfigRepository otpConfigRepository
     ) {
-        AdminService impl = new AdminServiceImpl(
+        AdminService impl = new DefaultAdminService(
             userRepository,
             otpRepository,
             otpConfigRepository

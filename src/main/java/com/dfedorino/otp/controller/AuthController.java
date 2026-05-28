@@ -1,4 +1,4 @@
-package com.dfedorino.otp.controller.auth;
+package com.dfedorino.otp.controller;
 
 import com.dfedorino.otp.controller.dto.ErrorResponse;
 import com.dfedorino.otp.controller.dto.LoginResponse;
@@ -6,6 +6,7 @@ import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.exception.InvalidCredentialsException;
 import com.dfedorino.otp.domain.exception.LoginAlreadyExists;
+import com.dfedorino.otp.domain.exception.UserNotFoundException;
 import com.dfedorino.otp.service.AuthService;
 import com.dfedorino.otp.service.dto.UserDto;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,16 @@ public class AuthController {
     public LoginResponse login(@RequestBody UserRequest request) {
         var token = authService.login(request.login(), request.password());
         return new LoginResponse(token);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(
+        UserNotFoundException ex
+    ) {
+        log.error(">> User not found", ex);
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

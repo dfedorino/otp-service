@@ -17,12 +17,12 @@
 - UserService (generate, deliver, validate, store OTP in a file)
 - OTP Expiration Service (mark codes as expired once per interval)
 - SpringMVC AuthController (register, login → JWT)
+- SpringMVC AdminController (list users, delete user, update OTP config)
+- SpringMVC UserController (generate OTP, validate OTP)
 
 
 ## Planned
 - EmailNotificationService (deliver via email)
 - SmsNotificationService (deliver via sms)
 - TelegramNotificationService (deliver via telegram bot)
-- SpringMVC AdminController (list users, delete user, update OTP config)
-- SpringMVC UserController (generate OTP, validate OTP)
 - README (endpoints, usage, test instructions)

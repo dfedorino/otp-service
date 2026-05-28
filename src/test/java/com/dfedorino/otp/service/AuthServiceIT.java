@@ -73,31 +73,7 @@ class AuthServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    void should_register_first_admin() {
-        // Act
-        User admin = authService.register(
-            "admin",
-            "password123",
-            Role.ADMIN
-        );
-        
-        // Assert
-        assertThat(admin.role())
-            .isEqualTo(Role.ADMIN);
-            
-        assertThat(tx.execute(() -> userRepository.existsAdmin()))
-            .isTrue();
-    }
-    
-    @Test
     void should_reject_second_admin_registration() {
-        // Arrange - Register first admin
-        authService.register(
-            "admin",
-            "password123",
-            Role.ADMIN
-        );
-        
         // Act + Assert
         assertThatThrownBy(() ->
             authService.register(
