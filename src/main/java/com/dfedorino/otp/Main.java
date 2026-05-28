@@ -1,6 +1,6 @@
 package com.dfedorino.otp;
 
-import com.dfedorino.otp.controller.filter.JwtFilter;
+import com.dfedorino.otp.controller.auth.filter.JwtFilter;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.service.JwtService;
 import com.dfedorino.otp.service.config.ServiceConfig;

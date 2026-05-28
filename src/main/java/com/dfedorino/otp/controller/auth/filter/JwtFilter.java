@@ -1,5 +1,6 @@
-package com.dfedorino.otp.controller.filter;
+package com.dfedorino.otp.controller.auth.filter;
 
+import com.dfedorino.otp.controller.auth.context.SecurityContext;
 import com.dfedorino.otp.controller.dto.ErrorResponse;
 import com.dfedorino.otp.service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,29 +42,35 @@ public class JwtFilter implements Filter {
             return;
         }
 
-        String header = httpRequest.getHeader("Authorization");
+        try {
+            String header = httpRequest.getHeader("Authorization");
 
-        String token = header == null ? null : header.substring(7);
+            String token = header == null ? null : header.substring(7);
 
-        if (header == null || !header.startsWith("Bearer ") || !jwtService.isTokenValid(token)) {
-            log.warn(">> Token is missing or invalid");
+            if (header == null || !header.startsWith("Bearer ") || !jwtService.isTokenValid(token)) {
+                log.warn(">> Token is missing or invalid");
 
-            var httpResponse = (HttpServletResponse) response;
+                var httpResponse = (HttpServletResponse) response;
 
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.setContentType("application/json");
+                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                httpResponse.setContentType("application/json");
 
-            httpResponse.getWriter().write(objectMapper.writeValueAsString(
-                new ErrorResponse("Missing or invalid Authorization header")));
+                httpResponse.getWriter().write(objectMapper.writeValueAsString(
+                    new ErrorResponse("Missing or invalid Authorization header")));
 
-            return;
+                return;
+            }
+
+            SecurityContext.set(
+                jwtService.extractUsername(token),
+                jwtService.extractRole(token)
+            );
+
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            log.error(">> ", e);
+        } finally {
+            SecurityContext.clear();
         }
-
-        String username = jwtService.extractUsername(token);
-
-        // attach user info to request
-        httpRequest.setAttribute("user", username);
-
-        chain.doFilter(request, response);
     }
 }

@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.dfedorino.otp.controller.dto.LoginResponse;
 import com.dfedorino.otp.controller.dto.OtpRequest;
 import com.dfedorino.otp.controller.dto.UserRequest;
-import com.dfedorino.otp.controller.filter.JwtFilter;
+import com.dfedorino.otp.controller.auth.filter.JwtFilter;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.config.RepositoryConfig;

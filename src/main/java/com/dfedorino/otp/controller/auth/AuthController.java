@@ -1,4 +1,4 @@
-package com.dfedorino.otp.controller;
+package com.dfedorino.otp.controller.auth;
 
 import com.dfedorino.otp.controller.dto.ErrorResponse;
 import com.dfedorino.otp.controller.dto.LoginResponse;
@@ -6,7 +6,6 @@ import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.exception.InvalidCredentialsException;
 import com.dfedorino.otp.domain.exception.LoginAlreadyExists;
-import com.dfedorino.otp.domain.exception.UserNotFoundException;
 import com.dfedorino.otp.service.AuthService;
 import com.dfedorino.otp.service.dto.UserDto;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,10 @@
 package com.dfedorino.otp.controller;
 
+import com.dfedorino.otp.controller.auth.annotation.RequiresRole;
 import com.dfedorino.otp.controller.dto.ErrorResponse;
 import com.dfedorino.otp.controller.dto.OtpRequest;
 import com.dfedorino.otp.controller.dto.ValidateOtpRequest;
+import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.exception.OtpConfigNotFoundException;
 import com.dfedorino.otp.domain.exception.UserNotFoundException;
 import com.dfedorino.otp.service.UserService;
@@ -24,11 +26,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final UserService userService;
 
+    @RequiresRole(Role.USER)
     @PostMapping("/otp/generate")
     public OtpCodeDto generateOtp(@RequestBody OtpRequest request) {
         return userService.generateOtp(request.userId(), request.operationId());
     }
 
+    @RequiresRole(Role.USER)
     @PostMapping("/otp/validate")
     public boolean validateOtp(@RequestBody ValidateOtpRequest request) {
         return userService.validateOtp(request.userId(), request.operationId(), request.code());
