@@ -18,8 +18,8 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeAll
     static void init() {
-        System.setProperty("DB_URL", POSTGRES.getJdbcUrl());
-        System.setProperty("DB_USER", POSTGRES.getUsername());
-        System.setProperty("DB_PASSWORD", POSTGRES.getPassword());
+        System.setProperty("POSTGRES_URL", POSTGRES.getJdbcUrl());
+        System.setProperty("POSTGRES_USER", POSTGRES.getUsername());
+        System.setProperty("POSTGRES_PASSWORD", POSTGRES.getPassword());
     }
 }

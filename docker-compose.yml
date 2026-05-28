@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: otp-db
+
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-otp_db}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-otp_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    ports:
+      - "8080:8080"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: otp-service
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+      POSTGRES_URL: jdbc:postgresql://db:5432/otp_db
+      POSTGRES_DB: ${POSTGRES_DB:-otp_db}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POOL_SIZE: ${POOL_SIZE:-5}
+
+volumes:
+  postgres_data:

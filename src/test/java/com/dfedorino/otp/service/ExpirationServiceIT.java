@@ -12,7 +12,7 @@ import com.dfedorino.otp.repository.transaction.TransactionManager;
 import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
-import com.dfedorino.otp.service.internal.ExpirationService;
+import com.dfedorino.otp.service.internal.DefaultExpirationService;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ public class ExpirationServiceIT extends AbstractIntegrationTest {
     private final ServiceConfig serviceConfig = new ServiceConfig();
     private final TransactionManager tx = new TransactionManager(repositoryConfig.pooledDataSource());
 
-    private ExpirationService expirationService;
+    private DefaultExpirationService expirationService;
     private AdminService adminService;
     private UserService userService;
     private UserRepository userRepository;
@@ -56,7 +56,7 @@ public class ExpirationServiceIT extends AbstractIntegrationTest {
         properties.setProperty("scheduler.interval", "1");
         properties.setProperty("scheduler.timeUnit", "SECONDS");
         
-        expirationService = new ExpirationService(mockScheduledExecutor, otpRepository, properties);
+        expirationService = new DefaultExpirationService(mockScheduledExecutor, otpRepository, properties);
         adminService = serviceConfig.adminService();
         userService = serviceConfig.userService(List.of());
 

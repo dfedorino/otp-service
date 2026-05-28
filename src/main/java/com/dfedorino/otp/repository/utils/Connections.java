@@ -11,14 +11,27 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @UtilityClass
 public class Connections {
+    static {
+        try {
+            Class.forName("org.postgresql.Driver");
+            log.debug(">> Driver found");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static Connection initConnection() {
         try {
 
+            String postgresUrl = System.getProperty("POSTGRES_URL", System.getenv("POSTGRES_URL"));
+            String postgresUser = System.getProperty("POSTGRES_USER", System.getenv("POSTGRES_USER"));
+            String postgresPassword = System.getProperty("POSTGRES_PASSWORD",
+                System.getenv("POSTGRES_PASSWORD"));
+
             return DriverManager.getConnection(
-                System.getProperty("DB_URL", System.getenv("DB_URL")),
-                System.getProperty("DB_USER", System.getenv("DB_USER")),
-                System.getProperty("DB_PASSWORD", System.getenv("DB_PASSWORD"))
+                postgresUrl,
+                postgresUser,
+                postgresPassword
             );
         } catch (SQLException e) {
             log.error("failed to init connection", e);

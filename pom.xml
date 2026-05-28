@@ -9,7 +9,7 @@
     <groupId>com.dfedorino</groupId>
     <artifactId>otp-service</artifactId>
     <version>1.0.0</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
     <name>OTP Service</name>
 
     <properties>
@@ -32,6 +32,8 @@
         <testcontainers.version>1.21.4</testcontainers.version>
         <commons-lang3.version>3.18.0</commons-lang3.version>
         <mockito-core.version>5.23.0</mockito-core.version>
+        <spring-webmvc.version>7.0.5</spring-webmvc.version>
+        <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
     </properties>
 
     <dependencyManagement>
@@ -121,6 +123,19 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring-webmvc.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>${jakarta.servlet-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
@@ -161,6 +176,7 @@
     </dependencies>
 
     <build>
+        <finalName>otp-service</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -224,9 +240,9 @@
 
                 <configuration>
                     <environmentVariables>
-                        <DB_USER>${DB_USER}</DB_USER>
-                        <DB_PASSWORD>${DB_PASSWORD}</DB_PASSWORD>
-                        <DB_NAME>${DB_NAME}</DB_NAME>
+                        <POSTGRES_USER>${POSTGRES_USER}</POSTGRES_USER>
+                        <POSTGRES_PASSWORD>${POSTGRES_PASSWORD}</POSTGRES_PASSWORD>
+                        <POSTGRES_DB>${POSTGRES_DB}</POSTGRES_DB>
                         <POOL_SIZE>5</POOL_SIZE>
                     </environmentVariables>
                 </configuration>
@@ -239,6 +255,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
             </plugin>
         </plugins>
     </build>
