@@ -4,6 +4,7 @@ import com.dfedorino.otp.delivery.DeliveryChannel;
 import com.dfedorino.otp.repository.OtpConfigRepository;
 import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
+import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.repository.transaction.TransactionManager;
 import com.dfedorino.otp.repository.transaction.TransactionalProxy;
 import com.dfedorino.otp.service.AdminService;
@@ -22,9 +23,11 @@ import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Slf4j
 @Configuration
+@Import(RepositoryConfig.class)
 public class ServiceConfig {
     private final Properties props = ApplicationPropertiesUtil.loadApplicationProperties();
 

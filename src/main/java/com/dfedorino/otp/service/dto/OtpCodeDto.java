@@ -1,14 +1,16 @@
 package com.dfedorino.otp.service.dto;
 
 import com.dfedorino.otp.domain.enums.OtpStatus;
-import java.time.Instant;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 
 public record OtpCodeDto(
     Long userId,
     String operationId,
     String code,
     OtpStatus status,
-    Instant expiresAt
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    LocalDateTime expiresAt
 ) {
 
 }

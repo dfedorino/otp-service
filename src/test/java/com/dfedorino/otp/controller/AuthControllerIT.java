@@ -11,7 +11,7 @@ import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.service.config.ServiceConfig;
-import com.dfedorino.otp.service.config.WebConfig;
+import com.dfedorino.otp.controller.config.WebConfig;
 import com.dfedorino.otp.service.dto.UserDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;

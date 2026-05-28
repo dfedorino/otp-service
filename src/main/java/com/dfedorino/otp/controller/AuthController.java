@@ -38,16 +38,6 @@ public class AuthController {
         return new LoginResponse(token);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(
-        UserNotFoundException ex
-    ) {
-        log.error(">> User not found", ex);
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse(ex.getMessage()));
-    }
-
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(
         InvalidCredentialsException ex

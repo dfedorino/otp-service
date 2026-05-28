@@ -1,7 +1,7 @@
 package com.dfedorino.otp;
 
 import com.dfedorino.otp.service.config.ServiceConfig;
-import com.dfedorino.otp.service.config.WebConfig;
+import com.dfedorino.otp.controller.config.WebConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
 import lombok.extern.slf4j.Slf4j;

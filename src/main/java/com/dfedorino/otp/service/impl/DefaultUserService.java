@@ -1,6 +1,8 @@
 package com.dfedorino.otp.service.impl;
 
 import com.dfedorino.otp.domain.enums.OtpStatus;
+import com.dfedorino.otp.domain.exception.OtpConfigNotFoundException;
+import com.dfedorino.otp.domain.exception.UserNotFoundException;
 import com.dfedorino.otp.domain.model.*;
 import com.dfedorino.otp.delivery.DeliveryChannel;
 import com.dfedorino.otp.repository.OtpConfigRepository;
@@ -9,8 +11,8 @@ import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.service.UserService;
 import com.dfedorino.otp.repository.transaction.Transactional;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
-import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -28,24 +30,22 @@ public class DefaultUserService implements UserService {
     public OtpCodeDto generateOtp(long userId, String operationId) {
         var userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User with id " + userId + " does not exist");
+            throw new UserNotFoundException("User not found, id: " + userId);
         }
 
         var configOptional = otpConfigRepository.findFirst();
         if (configOptional.isEmpty()) {
-            throw new IllegalStateException("OTP configuration not found");
+            throw new OtpConfigNotFoundException("OTP configuration not found");
         }
 
         OtpConfig config = configOptional.get();
 
         String code = RandomStringUtils.insecure().nextNumeric(config.codeLength());
 
-        Instant expiresAt = Instant.now().plusSeconds(config.ttlSeconds());
+        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(config.ttlSeconds());
 
-        boolean saved = otpRepository.save(userId, operationId, code, OtpStatus.ACTIVE, expiresAt);
-        if (!saved) {
-            throw new RuntimeException("Failed to save OTP code");
-        }
+        otpRepository.save(userId, operationId, code, OtpStatus.ACTIVE, expiresAt.toInstant(
+            ZoneOffset.UTC));
 
         OtpCodeDto otpCodeDto = new OtpCodeDto(userId, operationId, code, OtpStatus.ACTIVE,
             expiresAt);

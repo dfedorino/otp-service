@@ -25,19 +25,19 @@ public class PooledDataSource implements DataSource {
         );
         this.pool = new ArrayBlockingQueue<>(poolSize);
         this.allConnections = new ArrayList<>(poolSize);
-        log.info("initializing connection pool if size {}",  poolSize);
+        log.info(">> Initializing connection pool of size {}",  poolSize);
         for (int i = 0; i < poolSize; i++) {
             Connection conn = Connections.initConnection();
             pool.offer(wrap(conn));
             allConnections.add(conn);
         }
-        log.info("connection pool initialized");
+        log.info(">> Connection pool initialized");
     }
 
     @Override
     public Connection getConnection() {
         try {
-            log.debug("connection request");
+            log.debug(">> Connection request");
             return pool.take(); // blocks when empty
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -70,7 +70,7 @@ public class PooledDataSource implements DataSource {
 
     @Override
     public void close() {
-        log.debug("Closing connection pool");
+        log.info(">> Closing connection pool");
         for (Connection conn : allConnections) {
             try {
                 conn.close(); // real close
