@@ -1,5 +1,9 @@
 package com.dfedorino.otp.service.impl;
 
+import com.dfedorino.otp.domain.exception.AdminAlreadyExists;
+import com.dfedorino.otp.domain.exception.InvalidCredentialsException;
+import com.dfedorino.otp.domain.exception.LoginAlreadyExists;
+import com.dfedorino.otp.domain.exception.UserNotFoundException;
 import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.repository.UserRepository;
@@ -35,12 +39,12 @@ public class DefaultAuthService implements AuthService {
         // Check for duplicate logins
         Optional<User> existingUser = userRepository.findByLogin(login);
         if (existingUser.isPresent()) {
-            throw new IllegalStateException("Login already exists");
+            throw new LoginAlreadyExists("Login already exists");
         }
         
         // If role == ADMIN, check if admin already exists
         if (role == Role.ADMIN && userRepository.existsAdmin()) {
-            throw new IllegalStateException("Administrator already exists");
+            throw new AdminAlreadyExists("Administrator already exists");
         }
         
         // Hash password
@@ -70,14 +74,14 @@ public class DefaultAuthService implements AuthService {
         // Find user by login
         Optional<User> userOpt = userRepository.findByLogin(login);
         if (userOpt.isEmpty()) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new UserNotFoundException("User not found by login: \"" + login + "\"");
         }
         
         User user = userOpt.get();
         
         // Verify password using BCrypt
         if (!PasswordUtil.matches(password, user.hashedPassword())) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new InvalidCredentialsException("Invalid credentials");
         }
         
         // Generate JWT

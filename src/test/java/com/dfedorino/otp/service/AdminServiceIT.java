@@ -8,50 +8,34 @@ import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.exception.TransactionException;
 import com.dfedorino.otp.domain.model.OtpConfig;
 import com.dfedorino.otp.domain.model.User;
-import com.dfedorino.otp.repository.AbstractIntegrationTest;
+import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.OtpConfigRepository;
 import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
-import com.dfedorino.otp.repository.config.RepositoryConfig;
-import com.dfedorino.otp.repository.transaction.TransactionManager;
-import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import java.time.Instant;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class AdminServiceIT extends AbstractIntegrationTest {
+class AdminServiceIT extends AbstractIntegrationTest {
 
-    private TransactionManager tx;
     private AdminService adminService;
     private UserRepository userRepository;
     private OtpRepository otpRepository;
     private OtpConfigRepository otpConfigRepository;
 
     @BeforeEach
-    public void setUp() {
-        RepositoryConfig repositoryConfig = new RepositoryConfig();
+    void setUp() {
         ServiceConfig serviceConfig = new ServiceConfig();
-        tx = repositoryConfig.transactionManager();
-        userRepository = repositoryConfig.userRepository();
-        otpRepository = repositoryConfig.otpRepository();
-        otpConfigRepository = repositoryConfig.otpConfigRepository();
-        adminService = serviceConfig.adminService();
-    }
-
-    @AfterEach
-    public void tearDown() {
-        tx.executeWithoutResult(
-            () -> {
-                Queries.update("TRUNCATE TABLE otp_codes RESTART IDENTITY CASCADE");
-                Queries.update("TRUNCATE TABLE users RESTART IDENTITY CASCADE");
-            });
+        userRepository = REPOSITORY_CONFIG.userRepository();
+        otpRepository = REPOSITORY_CONFIG.otpRepository();
+        otpConfigRepository = REPOSITORY_CONFIG.otpConfigRepository();
+        adminService = serviceConfig.adminService(tx, userRepository, otpRepository, otpConfigRepository);
     }
 
     @Test
-    public void should_return_only_non_admin_users() {
+    void should_return_only_non_admin_users() {
         // Arrange
         tx.executeWithoutResult(() -> {
             userRepository.save("admin1", "hashed", Role.ADMIN);
@@ -69,7 +53,7 @@ public class AdminServiceIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void should_delete_user_and_otp_codes() {
+    void should_delete_user_and_otp_codes() {
         // Arrange
         long userId = tx.execute(() -> {
             userRepository.save("testuser", "hashed", Role.USER);
@@ -110,7 +94,7 @@ public class AdminServiceIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void should_reject_admin_deletion() {
+    void should_reject_admin_deletion() {
         // Arrange
         long adminId = tx.execute(() -> {
             userRepository.save("admin", "hashed", Role.ADMIN);
@@ -129,7 +113,7 @@ public class AdminServiceIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void should_reject_missing_user_deletion() {
+    void should_reject_missing_user_deletion() {
         // Act + Assert - Unwrap the TransactionException to check actual cause
         assertThatThrownBy(() ->
             adminService.deleteUser(999L)
@@ -140,7 +124,7 @@ public class AdminServiceIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void should_update_otp_config() {
+    void should_update_otp_config() {
         // Arrange
         OtpConfig config = tx.execute(() -> {
             otpConfigRepository.update(new OtpConfig(null, 6, 300));

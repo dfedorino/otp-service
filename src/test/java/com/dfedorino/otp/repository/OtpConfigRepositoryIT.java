@@ -2,34 +2,19 @@ package com.dfedorino.otp.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.domain.model.OtpConfig;
-import com.dfedorino.otp.repository.config.RepositoryConfig;
-import com.dfedorino.otp.repository.datasource.DataSource;
-import com.dfedorino.otp.repository.transaction.TransactionManager;
-import com.dfedorino.otp.repository.utils.Queries;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class OtpConfigRepositoryIT extends AbstractIntegrationTest {
 
-    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
-    private DataSource dataSource;
-    private TransactionManager tx;
+class OtpConfigRepositoryIT extends AbstractIntegrationTest {
+
     private OtpConfigRepository otpConfigRepository;
 
     @BeforeEach
-    public void setUp() {
-        dataSource = repositoryConfig.pooledDataSource();
-        otpConfigRepository = repositoryConfig.otpConfigRepository();
-        tx = new TransactionManager(dataSource);
-    }
-
-    @AfterEach
-    void tearDown() {
-        tx.executeWithoutResult(() ->
-            Queries.update("UPDATE otp_config SET code_length = 6, ttl_seconds = 300"));
-        dataSource.close();
+    void setUp() {
+        otpConfigRepository = REPOSITORY_CONFIG.otpConfigRepository();
     }
 
     @Test

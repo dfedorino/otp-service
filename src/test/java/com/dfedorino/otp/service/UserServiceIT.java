@@ -6,18 +6,14 @@ import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.OtpCode;
 import com.dfedorino.otp.domain.model.OtpConfig;
 import com.dfedorino.otp.domain.model.User;
-import com.dfedorino.otp.repository.AbstractIntegrationTest;
+import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.OtpConfigRepository;
 import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
-import com.dfedorino.otp.repository.config.RepositoryConfig;
-import com.dfedorino.otp.repository.transaction.TransactionManager;
-import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,12 +29,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceIT extends AbstractIntegrationTest {
+class UserServiceIT extends AbstractIntegrationTest {
     
-    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
-    private final ServiceConfig serviceConfig = new ServiceConfig();
-    private final TransactionManager tx = new TransactionManager(repositoryConfig.pooledDataSource());
-    
+    private static final ServiceConfig SERVICE_CONFIG = new ServiceConfig();
+
     private UserService userService;
     private UserRepository userRepository;
     private OtpRepository otpRepository;
@@ -47,24 +41,16 @@ public class UserServiceIT extends AbstractIntegrationTest {
     private DeliveryChannel deliveryChannel;
     
     @BeforeEach
-    public void setUp() {
-        userRepository = repositoryConfig.userRepository();
-        otpRepository = repositoryConfig.otpRepository();
-        otpConfigRepository = repositoryConfig.otpConfigRepository();
+    void setUp() {
+        userRepository = REPOSITORY_CONFIG.userRepository();
+        otpRepository = REPOSITORY_CONFIG.otpRepository();
+        otpConfigRepository = REPOSITORY_CONFIG.otpConfigRepository();
 
-        userService = serviceConfig.userService(List.of(deliveryChannel));
-    }
-    
-    @AfterEach
-    public void tearDown() {
-        tx.executeWithoutResult(() -> {
-            Queries.update("TRUNCATE TABLE users RESTART IDENTITY CASCADE");
-            Queries.update("TRUNCATE TABLE otp_codes RESTART IDENTITY CASCADE");
-        });
+        userService = SERVICE_CONFIG.userService(List.of(deliveryChannel), tx, userRepository, otpRepository, otpConfigRepository);
     }
     
     @Test
-    public void should_generate_otp_with_default_otp_config() {
+    void should_generate_otp_with_default_otp_config() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
             userRepository.save("test@example.com", "hashedPassword", Role.USER);
@@ -91,7 +77,7 @@ public class UserServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_generate_unique_otp_codes() {
+    void should_generate_unique_otp_codes() {
         // Arrange - Insert one USER user
         
         long userId = tx.execute(() -> {
@@ -120,7 +106,7 @@ public class UserServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_validate_active_otp() {
+    void should_validate_active_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
             userRepository.save("test@example.com", "hashedPassword", Role.USER);
@@ -144,7 +130,7 @@ public class UserServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_reject_invalid_otp() {
+    void should_reject_invalid_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
             userRepository.save("test@example.com", "hashedPassword", Role.USER);
@@ -161,7 +147,7 @@ public class UserServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_reject_expired_otp() {
+    void should_reject_expired_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
             userRepository.save("test@example.com", "hashedPassword", Role.USER);
@@ -202,7 +188,7 @@ public class UserServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_reject_reused_otp() {
+    void should_reject_reused_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
             userRepository.save("test@example.com", "hashedPassword", Role.USER);

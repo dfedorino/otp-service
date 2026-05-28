@@ -1,7 +1,10 @@
 package com.dfedorino.otp.service.config;
 
 import com.dfedorino.otp.delivery.DeliveryChannel;
-import com.dfedorino.otp.repository.config.RepositoryConfig;
+import com.dfedorino.otp.repository.OtpConfigRepository;
+import com.dfedorino.otp.repository.OtpRepository;
+import com.dfedorino.otp.repository.UserRepository;
+import com.dfedorino.otp.repository.transaction.TransactionManager;
 import com.dfedorino.otp.repository.transaction.TransactionalProxy;
 import com.dfedorino.otp.service.AdminService;
 import com.dfedorino.otp.service.AuthService;
@@ -23,7 +26,6 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class ServiceConfig {
-    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
     private final Properties props = ApplicationPropertiesUtil.loadApplicationProperties();
 
     @Bean
@@ -34,45 +36,55 @@ public class ServiceConfig {
     }
 
     @Bean
-    public AuthService authService() {
+    public AuthService authService(TransactionManager txManager, UserRepository userRepository) {
         log.debug(">> Creating auth service");
-        var txManager = repositoryConfig.transactionManager();
         AuthService impl = new DefaultAuthService(
-            repositoryConfig.userRepository(),
+            userRepository,
             jwtService()
         );
         return TransactionalProxy.create(impl, txManager);
     }
 
     @Bean
-    public UserService userService(List<DeliveryChannel> deliveryChannels) {
-        var txManager = repositoryConfig.transactionManager();
+    public UserService userService(
+        List<DeliveryChannel> deliveryChannels,
+        TransactionManager txManager,
+        UserRepository userRepository,
+        OtpRepository otpRepository,
+        OtpConfigRepository otpConfigRepository
+    ) {
         UserService impl = new DefaultUserService(
-            repositoryConfig.userRepository(),
-            repositoryConfig.otpRepository(),
-            repositoryConfig.otpConfigRepository(),
+            userRepository,
+            otpRepository,
+            otpConfigRepository,
             deliveryChannels
         );
         return TransactionalProxy.create(impl, txManager);
     }
 
     @Bean
-    public AdminService adminService() {
-        var txManager = repositoryConfig.transactionManager();
+    public AdminService adminService(
+        TransactionManager txManager,
+        UserRepository userRepository,
+        OtpRepository otpRepository,
+        OtpConfigRepository otpConfigRepository
+    ) {
         AdminService impl = new AdminServiceImpl(
-            repositoryConfig.userRepository(),
-            repositoryConfig.otpRepository(),
-            repositoryConfig.otpConfigRepository()
+            userRepository,
+            otpRepository,
+            otpConfigRepository
         );
         return TransactionalProxy.create(impl, txManager);
     }
 
     @Bean
-    public ExpirationService expirationService() {
-        var txManager = repositoryConfig.transactionManager();
+    public ExpirationService expirationService(
+        TransactionManager txManager,
+        OtpRepository otpRepository
+    ) {
         ExpirationService impl = new DefaultExpirationService(
             Executors.newSingleThreadScheduledExecutor(),
-            repositoryConfig.otpRepository(),
+            otpRepository,
             props
         );
         return TransactionalProxy.create(impl, txManager);

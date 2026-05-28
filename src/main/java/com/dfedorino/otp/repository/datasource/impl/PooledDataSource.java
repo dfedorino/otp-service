@@ -70,6 +70,7 @@ public class PooledDataSource implements DataSource {
 
     @Override
     public void close() {
+        log.debug("Closing connection pool");
         for (Connection conn : allConnections) {
             try {
                 conn.close(); // real close

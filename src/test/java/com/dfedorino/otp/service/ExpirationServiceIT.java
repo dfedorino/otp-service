@@ -4,17 +4,13 @@ import com.dfedorino.otp.domain.enums.OtpStatus;
 import com.dfedorino.otp.domain.model.OtpCode;
 import com.dfedorino.otp.domain.model.OtpConfig;
 import com.dfedorino.otp.domain.model.User;
-import com.dfedorino.otp.repository.AbstractIntegrationTest;
+import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
-import com.dfedorino.otp.repository.config.RepositoryConfig;
-import com.dfedorino.otp.repository.transaction.TransactionManager;
-import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
 import com.dfedorino.otp.service.internal.DefaultExpirationService;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +27,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ExpirationServiceIT extends AbstractIntegrationTest {
+class ExpirationServiceIT extends AbstractIntegrationTest {
 
-    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
-    private final ServiceConfig serviceConfig = new ServiceConfig();
-    private final TransactionManager tx = new TransactionManager(repositoryConfig.pooledDataSource());
+    private static final ServiceConfig SERVICE_CONFIG = new ServiceConfig();
 
     private DefaultExpirationService expirationService;
     private AdminService adminService;
@@ -47,9 +41,9 @@ public class ExpirationServiceIT extends AbstractIntegrationTest {
     private ScheduledExecutorService mockScheduledExecutor;
 
     @BeforeEach
-    public void setUp() {
-        userRepository = repositoryConfig.userRepository();
-        otpRepository = repositoryConfig.otpRepository();
+    void setUp() {
+        userRepository = REPOSITORY_CONFIG.userRepository();
+        otpRepository = REPOSITORY_CONFIG.otpRepository();
 
         // Set up properties for scheduler
         Properties properties = new Properties();
@@ -57,8 +51,8 @@ public class ExpirationServiceIT extends AbstractIntegrationTest {
         properties.setProperty("scheduler.timeUnit", "SECONDS");
         
         expirationService = new DefaultExpirationService(mockScheduledExecutor, otpRepository, properties);
-        adminService = serviceConfig.adminService();
-        userService = serviceConfig.userService(List.of());
+        adminService = SERVICE_CONFIG.adminService(tx, userRepository, otpRepository, REPOSITORY_CONFIG.otpConfigRepository());
+        userService = SERVICE_CONFIG.userService(List.of(), tx, userRepository, otpRepository, REPOSITORY_CONFIG.otpConfigRepository());
 
         given(mockScheduledExecutor.scheduleWithFixedDelay(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class)))
             .will(i -> {
@@ -67,17 +61,8 @@ public class ExpirationServiceIT extends AbstractIntegrationTest {
             });
     }
 
-    @AfterEach
-    public void tearDown() {
-        tx.executeWithoutResult(() -> {
-            Queries.update("TRUNCATE TABLE users RESTART IDENTITY CASCADE");
-            Queries.update("TRUNCATE TABLE otp_codes RESTART IDENTITY CASCADE");
-        });
-        adminService.updateOtpConfig(new OtpConfig(1L, 6, 300)); // restore defaults
-    }
-
     @Test
-    public void should_delete_expired_otp_codes() throws InterruptedException {
+    void should_delete_expired_otp_codes() throws InterruptedException {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
             userRepository.save("test@example.com", "hashedPassword", com.dfedorino.otp.domain.enums.Role.USER);
@@ -106,7 +91,7 @@ public class ExpirationServiceIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void should_not_delete_active_otp_codes() {
+    void should_not_delete_active_otp_codes() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
             userRepository.save("test@example.com", "hashedPassword", com.dfedorino.otp.domain.enums.Role.USER);

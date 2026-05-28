@@ -1,17 +1,17 @@
 package com.dfedorino.otp.service;
 
+import com.dfedorino.otp.domain.exception.AdminAlreadyExists;
+import com.dfedorino.otp.domain.exception.InvalidCredentialsException;
+import com.dfedorino.otp.domain.exception.LoginAlreadyExists;
 import com.dfedorino.otp.domain.exception.TransactionException;
+import com.dfedorino.otp.domain.exception.UserNotFoundException;
 import com.dfedorino.otp.repository.UserRepository;
-import com.dfedorino.otp.repository.config.RepositoryConfig;
-import com.dfedorino.otp.repository.transaction.TransactionManager;
-import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.service.impl.DefaultJwtService;
 import com.dfedorino.otp.util.PasswordUtil;
 import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.domain.enums.Role;
-import com.dfedorino.otp.repository.AbstractIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
+import com.dfedorino.otp.common.AbstractIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,34 +20,22 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class AuthServiceIT extends AbstractIntegrationTest {
+class AuthServiceIT extends AbstractIntegrationTest {
+    private static final ServiceConfig SERVICE_CONFIG = new ServiceConfig();
 
-    private TransactionManager tx;
     private AuthService authService;
     private UserRepository userRepository;
     private DefaultJwtService jwtUtil;
     
     @BeforeEach
-    public void setUp() {
-        RepositoryConfig repositoryConfig = new RepositoryConfig();
-        ServiceConfig serviceConfig = new ServiceConfig();
-        tx = repositoryConfig.transactionManager();
-        userRepository = repositoryConfig.userRepository();
-        jwtUtil = serviceConfig.jwtService();
-        authService = serviceConfig.authService();
-    }
-
-    @AfterEach
-    public void tearDown() {
-        tx.executeWithoutResult(
-            () -> {
-                Queries.update("TRUNCATE TABLE otp_codes RESTART IDENTITY CASCADE");
-                Queries.update("TRUNCATE TABLE users RESTART IDENTITY CASCADE");
-            });
+    void setUp() {
+        userRepository = REPOSITORY_CONFIG.userRepository();
+        jwtUtil = SERVICE_CONFIG.jwtService();
+        authService = SERVICE_CONFIG.authService(tx, REPOSITORY_CONFIG.userRepository());
     }
 
     @Test
-    public void should_register_regular_user() {
+    void should_register_regular_user() {
         // Act
         User user = authService.register(
             "john",
@@ -85,7 +73,7 @@ public class AuthServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_register_first_admin() {
+    void should_register_first_admin() {
         // Act
         User admin = authService.register(
             "admin",
@@ -102,7 +90,7 @@ public class AuthServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_reject_second_admin_registration() {
+    void should_reject_second_admin_registration() {
         // Arrange - Register first admin
         authService.register(
             "admin",
@@ -119,12 +107,12 @@ public class AuthServiceIT extends AbstractIntegrationTest {
             )
         )
             .isInstanceOf(TransactionException.class)
-            .hasCauseInstanceOf(IllegalStateException.class)
+            .hasCauseInstanceOf(AdminAlreadyExists.class)
             .hasRootCauseMessage("Administrator already exists");
     }
     
     @Test
-    public void should_reject_duplicate_login() {
+    void should_reject_duplicate_login() {
         // Arrange - Register first user
         authService.register(
             "john",
@@ -141,12 +129,12 @@ public class AuthServiceIT extends AbstractIntegrationTest {
             )
         )
             .isInstanceOf(TransactionException.class)
-            .hasCauseInstanceOf(IllegalStateException.class)
+            .hasCauseInstanceOf(LoginAlreadyExists.class)
             .hasRootCauseMessage("Login already exists");
     }
     
     @Test
-    public void should_login_successfully() {
+    void should_login_successfully() {
         // Arrange - Register user
         authService.register(
             "john",
@@ -175,7 +163,7 @@ public class AuthServiceIT extends AbstractIntegrationTest {
     }
     
     @Test
-    public void should_reject_login_for_unknown_user() {
+    void should_reject_login_for_unknown_user() {
         // Act + Assert
         assertThatThrownBy(() ->
             authService.login(
@@ -184,12 +172,12 @@ public class AuthServiceIT extends AbstractIntegrationTest {
             )
         )
             .isInstanceOf(TransactionException.class)
-            .hasCauseInstanceOf(IllegalArgumentException.class)
-            .hasRootCauseMessage("Invalid credentials");
+            .hasCauseInstanceOf(UserNotFoundException.class)
+            .hasRootCauseMessage("User not found by login: \"missing\"");
     }
     
     @Test
-    public void should_reject_login_for_invalid_password() {
+    void should_reject_login_for_invalid_password() {
         // Arrange - Register user
         authService.register(
             "john",
@@ -205,7 +193,7 @@ public class AuthServiceIT extends AbstractIntegrationTest {
             )
         )
             .isInstanceOf(TransactionException.class)
-            .hasCauseInstanceOf(IllegalArgumentException.class)
+            .hasCauseInstanceOf(InvalidCredentialsException.class)
             .hasRootCauseMessage("Invalid credentials");
     }
 }

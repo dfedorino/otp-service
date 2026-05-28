@@ -2,45 +2,23 @@ package com.dfedorino.otp.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.domain.enums.OtpStatus;
 import com.dfedorino.otp.domain.model.OtpCode;
-import com.dfedorino.otp.repository.config.RepositoryConfig;
-import com.dfedorino.otp.repository.datasource.DataSource;
-import com.dfedorino.otp.repository.transaction.TransactionManager;
 import com.dfedorino.otp.repository.utils.Queries;
 import com.dfedorino.otp.domain.enums.Role;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class OtpRepositoryIT extends AbstractIntegrationTest {
+class OtpRepositoryIT extends AbstractIntegrationTest {
 
-    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
-    private DataSource dataSource;
-    private TransactionManager tx;
     private OtpRepository otpRepository;
 
     @BeforeEach
-    public void setUp() {
-        // Set the required system property for the datasource
-        System.setProperty("POOL_SIZE", "5");
-        dataSource = repositoryConfig.pooledDataSource();
-        otpRepository = repositoryConfig.otpRepository();
-        tx = new TransactionManager(dataSource);
-    }
-
-    @AfterEach
-    public void tearDown() {
-        tx.executeWithoutResult(
-            () -> {
-                Queries.update("TRUNCATE TABLE otp_codes RESTART IDENTITY CASCADE");
-                Queries.update("TRUNCATE TABLE users RESTART IDENTITY CASCADE");
-            });
-        dataSource.close();
+    void setUp() {
+        otpRepository = REPOSITORY_CONFIG.otpRepository();
     }
 
     @Test
