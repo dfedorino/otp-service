@@ -2,14 +2,18 @@ package com.dfedorino.otp.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.dfedorino.otp.controller.dto.LoginResponse;
+import com.dfedorino.otp.controller.dto.OtpRequest;
 import com.dfedorino.otp.controller.dto.UserRequest;
+import com.dfedorino.otp.controller.filter.JwtFilter;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
+import com.dfedorino.otp.service.JwtService;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.controller.config.WebConfig;
 import com.dfedorino.otp.service.dto.UserDto;
@@ -17,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,7 +42,13 @@ class AuthControllerIT extends AbstractIntegrationTest {
         context.register(WebConfig.class, ServiceConfig.class, RepositoryConfig.class);
         context.refresh();
 
-        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+        mockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .addFilter(new JwtFilter(
+                context.getBean(JwtService.class),
+                context.getBean(ObjectMapper.class)
+            ))
+            .build();
         objectMapper = new ObjectMapper();
     }
 
@@ -132,5 +143,52 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
         String responseContent = result.getResponse().getContentAsString();
         assertThat(responseContent).contains("User not found by login: unknown");
+    }
+
+    @Test
+    void should_not_allow_otp_code_creation_without_token() throws Exception {
+        OtpRequest request = new OtpRequest(1L, "operationId");
+
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isUnauthorized())
+            .andDo(print());
+    }
+
+    @Test
+    void should_allow_otp_code_creation_with_token() throws Exception {
+        UserRequest request = new UserRequest("testuser", "password123");
+
+        // Register user
+        MvcResult registerUserMvcResult = mockMvc.perform(post("/api/auth")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        UserDto userDto = objectMapper.readValue(registerUserMvcResult.getResponse().getContentAsString(), UserDto.class);
+
+        // Login user
+        MvcResult mvcResult = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        String responseContent = mvcResult.getResponse().getContentAsString();
+        LoginResponse response = objectMapper.readValue(responseContent, LoginResponse.class);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth(response.token());
+
+        // Create OTP
+        var otpRequest = new OtpRequest(userDto.id(), "operationId");
+        mockMvc.perform(post("/api/users/otp/generate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(httpHeaders)
+                .content(objectMapper.writeValueAsString(otpRequest)))
+            .andExpect(status().isOk())
+            .andDo(print());
     }
 }
