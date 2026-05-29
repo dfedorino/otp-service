@@ -15,16 +15,12 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ExpirationServiceIT extends AbstractIntegrationTest {
@@ -36,9 +32,6 @@ class ExpirationServiceIT extends AbstractIntegrationTest {
     private UserService userService;
     private UserRepository userRepository;
     private OtpRepository otpRepository;
-    
-    @Mock
-    private ScheduledExecutorService mockScheduledExecutor;
 
     @BeforeEach
     void setUp() {
@@ -48,12 +41,6 @@ class ExpirationServiceIT extends AbstractIntegrationTest {
         expirationService = new DefaultExpirationService(otpRepository);
         adminService = SERVICE_CONFIG.adminService(tx, userRepository, otpRepository, REPOSITORY_CONFIG.otpConfigRepository());
         userService = SERVICE_CONFIG.userService(List.of(), tx, userRepository, otpRepository, REPOSITORY_CONFIG.otpConfigRepository());
-
-        given(mockScheduledExecutor.scheduleWithFixedDelay(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class)))
-            .will(i -> {
-                i.getArgument(0, Runnable.class).run();
-                return null;
-            });
     }
 
     @Test
@@ -80,9 +67,9 @@ class ExpirationServiceIT extends AbstractIntegrationTest {
         TimeUnit.SECONDS.sleep(1L);
         tx.executeWithoutResult(() -> expirationService.start());
 
-        // Verify that OTP code no longer exists
+        // Verify that OTP code marked as expired
         Optional<OtpCode> otpAfter = tx.execute(() -> otpRepository.findByUserIdAndOperationIdAndCode(userId, operationId, otp.code()));
-        assertThat(otpAfter).isEmpty();
+        assertThat(otpAfter).isNotEmpty().get().satisfies(code -> assertThat(code.status()).isEqualTo(OtpStatus.EXPIRED));
     }
 
     @Test
