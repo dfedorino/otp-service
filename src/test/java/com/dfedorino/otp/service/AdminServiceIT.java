@@ -3,6 +3,7 @@ package com.dfedorino.otp.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.dfedorino.otp.controller.dto.UpdateOtpConfigRequest;
 import com.dfedorino.otp.domain.enums.OtpStatus;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.exception.TransactionException;
@@ -121,14 +122,14 @@ class AdminServiceIT extends AbstractIntegrationTest {
     @Test
     void should_update_otp_config() {
         // Arrange
-        OtpConfig config = tx.execute(() -> {
+        tx.execute(() -> {
             otpConfigRepository.update(new OtpConfig(null, 6, 300));
             return otpConfigRepository.findFirst()
                 .orElseThrow();
         });
 
         // Modify values
-        OtpConfig modifiedConfig = new OtpConfig(config.id(), 8, 600);
+        UpdateOtpConfigRequest modifiedConfig = new UpdateOtpConfigRequest(8, 600);
 
         // Act
         OtpConfig updated = adminService.updateOtpConfig(modifiedConfig);

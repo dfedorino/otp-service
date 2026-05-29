@@ -29,20 +29,30 @@ public class UserController {
     @RequiresRole(Role.USER)
     @PostMapping("/otp/generate")
     public OtpCodeDto generateOtp(@RequestBody OtpRequest request) {
-        return userService.generateOtp(request.userId(), request.operationId());
+        log.info("Generating OTP for user ID: {} with operation ID: {}", request.userId(), request.operationId());
+        OtpCodeDto otp = userService.generateOtp(request.userId(), request.operationId());
+        log.info("Successfully generated OTP for user ID: {}", request.userId());
+        return otp;
     }
 
     @RequiresRole(Role.USER)
     @PostMapping("/otp/validate")
     public boolean validateOtp(@RequestBody ValidateOtpRequest request) {
-        return userService.validateOtp(request.userId(), request.operationId(), request.code());
+        log.info("Validating OTP for user ID: {} with operation ID: {} and code: {}", request.userId(), request.operationId(), request.code());
+        boolean isValid = userService.validateOtp(request.userId(), request.operationId(), request.code());
+        if (isValid) {
+            log.info("Successfully validated OTP for user ID: {}", request.userId());
+        } else {
+            log.warn("Failed to validate OTP for user ID: {} with operation ID: {}", request.userId(), request.operationId());
+        }
+        return isValid;
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(
         UserNotFoundException ex
     ) {
-        log.error(">> User not found", ex);
+        log.error("User not found", ex);
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse(ex.getMessage()));
@@ -52,7 +62,7 @@ public class UserController {
     public ResponseEntity<ErrorResponse> handleOtpConfigNotFoundException(
         OtpConfigNotFoundException ex
     ) {
-        log.error(">> OTP config not found", ex);
+        log.error("OTP config not found", ex);
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse(ex.getMessage()));

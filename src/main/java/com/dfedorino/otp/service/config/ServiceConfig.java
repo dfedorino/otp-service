@@ -19,7 +19,6 @@ import com.dfedorino.otp.service.internal.ExpirationService;
 import com.dfedorino.otp.util.ApplicationPropertiesUtil;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -85,11 +84,7 @@ public class ServiceConfig {
         TransactionManager txManager,
         OtpRepository otpRepository
     ) {
-        ExpirationService impl = new DefaultExpirationService(
-            Executors.newSingleThreadScheduledExecutor(),
-            otpRepository,
-            props
-        );
+        ExpirationService impl = new DefaultExpirationService(otpRepository);
         return TransactionalProxy.create(impl, txManager);
     }
 }

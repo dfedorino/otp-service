@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS otp_config
     ttl_seconds INT NOT NULL DEFAULT 300
 );
 
-INSERT INTO otp_config (code_length, ttl_seconds) VALUES (6, 300);
+INSERT INTO otp_config (code_length, ttl_seconds) VALUES (6, 10);
 
 CREATE TABLE IF NOT EXISTS otp_codes
 (

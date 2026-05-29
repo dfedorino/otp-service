@@ -1,9 +1,9 @@
 package com.dfedorino.otp.service;
 
+import com.dfedorino.otp.controller.dto.UpdateOtpConfigRequest;
 import com.dfedorino.otp.domain.enums.OtpStatus;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.OtpCode;
-import com.dfedorino.otp.domain.model.OtpConfig;
 import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.OtpRepository;
@@ -19,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -45,13 +44,8 @@ class ExpirationServiceIT extends AbstractIntegrationTest {
     void setUp() {
         userRepository = REPOSITORY_CONFIG.userRepository();
         otpRepository = REPOSITORY_CONFIG.otpRepository();
-
-        // Set up properties for scheduler
-        Properties properties = new Properties();
-        properties.setProperty("scheduler.interval", "1");
-        properties.setProperty("scheduler.timeUnit", "SECONDS");
         
-        expirationService = new DefaultExpirationService(mockScheduledExecutor, otpRepository, properties);
+        expirationService = new DefaultExpirationService(otpRepository);
         adminService = SERVICE_CONFIG.adminService(tx, userRepository, otpRepository, REPOSITORY_CONFIG.otpConfigRepository());
         userService = SERVICE_CONFIG.userService(List.of(), tx, userRepository, otpRepository, REPOSITORY_CONFIG.otpConfigRepository());
 
@@ -72,7 +66,7 @@ class ExpirationServiceIT extends AbstractIntegrationTest {
             return found.get().id();
         });
 
-        adminService.updateOtpConfig(new OtpConfig(1L, 6, 1));
+        adminService.updateOtpConfig(new UpdateOtpConfigRequest(6, 1));
         String operationId = "operationId";
 
         OtpCodeDto otp = userService.generateOtp(userId, operationId);

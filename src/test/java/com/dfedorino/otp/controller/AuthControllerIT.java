@@ -9,10 +9,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.dfedorino.otp.common.TestData;
+import com.dfedorino.otp.controller.dto.LoginRequest;
 import com.dfedorino.otp.controller.dto.LoginResponse;
 import com.dfedorino.otp.controller.dto.OtpRequest;
 import com.dfedorino.otp.controller.auth.filter.JwtFilter;
-import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
@@ -85,7 +85,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.USER_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists())
             .andReturn();
@@ -120,7 +120,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new UserRequest(TestData.USER_REQUEST.login(), TestData.USER_REQUEST.phoneNumber(), "wrongpass"))))
+                .content(objectMapper.writeValueAsString(new LoginRequest(TestData.USER_REQUEST.login(), "wrongpass"))))
             .andExpect(status().isUnauthorized())
             .andReturn();
 
@@ -132,7 +132,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
     void should_reject_login_for_unknown_user() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.USER_LOGIN_REQUEST)))
             .andExpect(status().isNotFound())
             .andExpect(content().string(containsString("User not found")));
     }

@@ -124,7 +124,7 @@ class UserControllerIT extends AbstractIntegrationTest {
         // Then login
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.USER_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -183,7 +183,7 @@ class UserControllerIT extends AbstractIntegrationTest {
         // Then login
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.USER_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -228,7 +228,7 @@ class UserControllerIT extends AbstractIntegrationTest {
         // Login
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.USER_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 

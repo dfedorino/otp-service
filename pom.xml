@@ -310,9 +310,10 @@
                         <POOL_SIZE>5</POOL_SIZE>
                         <BOT_TOKEN>BOT_TOKEN</BOT_TOKEN>
                         <BOT_CHAT_ID>12345</BOT_CHAT_ID>
-                        <JWT_SECRET>JWT_SECRET</JWT_SECRET>
-                        <EMAIL_PASSWORD>EMAIL_PASSWORD</EMAIL_PASSWORD>
-                        <SMPP_PASSWORD>SMPP_PASSWORD</SMPP_PASSWORD>
+                        <JWT_SECRET>abcdefghijklmnopqrstuvwxyz123456</JWT_SECRET>
+                        <EMAIL_PASSWORD>password</EMAIL_PASSWORD>
+                        <SMPP_PASSWORD>password</SMPP_PASSWORD>
+                        <OTP_FILE_PATH>./src/test/resources/otp/codes.txt</OTP_FILE_PATH>
                     </environmentVariables>
                 </configuration>
 

@@ -87,7 +87,7 @@ class OtpRepositoryIT extends AbstractIntegrationTest {
             otpRepository.save(3L, "operation3", "333333", OtpStatus.ACTIVE, futureExpiresAt);
 
             // Call deleteActive(Instant.now())
-            boolean deleted = otpRepository.deleteActive(Instant.now()) > 0;
+            boolean deleted = otpRepository.deactivateExpired(Instant.now()) > 0;
 
             // Verify: deleted count = 2, active code still exists
             assertThat(deleted).isTrue();
@@ -114,7 +114,7 @@ class OtpRepositoryIT extends AbstractIntegrationTest {
             otpRepository.save(2L, "expired-operation", "222222", OtpStatus.EXPIRED, expiresAt);
 
             // Call deleteActive(Instant.now())
-            boolean deleted = otpRepository.deleteActive(Instant.now()) > 0;
+            boolean deleted = otpRepository.deactivateExpired(Instant.now()) > 0;
 
             // Verify: no deletion (method only deletes ACTIVE + time-expired)
             assertThat(deleted).isFalse();

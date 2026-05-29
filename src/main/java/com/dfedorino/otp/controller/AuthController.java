@@ -1,6 +1,7 @@
 package com.dfedorino.otp.controller;
 
 import com.dfedorino.otp.controller.dto.ErrorResponse;
+import com.dfedorino.otp.controller.dto.LoginRequest;
 import com.dfedorino.otp.controller.dto.LoginResponse;
 import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.domain.enums.Role;
@@ -28,13 +29,17 @@ public class AuthController {
 
     @PostMapping
     public UserDto createUser(@RequestBody UserRequest request) {
+        log.info("Creating new user with login: {}", request.login());
         var created = authService.register(request.login(), request.phoneNumber(), request.password(), Role.USER);
+        log.info("Successfully created user with ID: {}", created.id());
         return new UserDto(created.id(), created.login(), created.phoneNumber(), created.role());
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody UserRequest request) {
+    public LoginResponse login(@RequestBody LoginRequest request) {
+        log.info("Attempting login for user: {}", request.login());
         var token = authService.login(request.login(), request.password());
+        log.info("Successfully logged in user: {}", request.login());
         return new LoginResponse(token);
     }
 
@@ -42,7 +47,7 @@ public class AuthController {
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(
         UserNotFoundException ex
     ) {
-        log.error(">> User not found", ex);
+        log.error("User not found", ex);
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse(ex.getMessage()));
@@ -52,7 +57,7 @@ public class AuthController {
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(
         InvalidCredentialsException ex
     ) {
-        log.error(">> Invalid credentials", ex);
+        log.error("Invalid credentials", ex);
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
             .body(new ErrorResponse(ex.getMessage()));
@@ -62,7 +67,7 @@ public class AuthController {
     public ResponseEntity<ErrorResponse> handleLoginAlreadyExists(
         LoginAlreadyExists ex
     ) {
-        log.error(">> Login already exists", ex);
+        log.error("Login already exists", ex);
         return ResponseEntity
             .status(HttpStatus.CONFLICT)
             .body(new ErrorResponse(ex.getMessage()));

@@ -19,6 +19,23 @@ services:
       timeout: 5s
       retries: 10
 
+  smtp:
+    image: axllent/mailpit:latest
+    container_name: otp-smtp
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  smpp:
+    image: ibarisic12/smppsim:latest
+    container_name: otp-smpp
+    restart: unless-stopped
+
+    ports:
+      - "2775:2775"
+      - "8088:88"
+
   app:
     ports:
       - "8080:8080"
@@ -30,13 +47,40 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      smtp:
+        condition: service_started
+      smpp:
+        condition: service_started
+
     environment:
       JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+
       POSTGRES_URL: jdbc:postgresql://db:5432/otp_db
       POSTGRES_DB: ${POSTGRES_DB:-otp_db}
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+
       POOL_SIZE: ${POOL_SIZE:-5}
+
+      BOT_TOKEN: ${BOT_TOKEN}
+      BOT_CHAT_ID: ${BOT_CHAT_ID}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+
+      # SMTP connection
+      SMTP_HOST: smtp
+      SMTP_PORT: 1025
+
+      # SMPP connection
+      SMPP_HOST: smpp
+      SMPP_PORT: 2775
+      SMPP_SYSTEM_ID: smppclient1
+      SMPP_PASSWORD: ${SMPP_PASSWORD:-password}
+
+      OTP_FILE_PATH: /data/otp/codes.txt
 
 volumes:
   postgres_data:
+  otp_files:

@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.dfedorino.otp.common.TestData;
 import com.dfedorino.otp.controller.dto.LoginResponse;
 import com.dfedorino.otp.controller.auth.filter.JwtFilter;
-import com.dfedorino.otp.domain.model.OtpConfig;
+import com.dfedorino.otp.controller.dto.UpdateOtpConfigRequest;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.service.JwtService;
@@ -64,7 +64,7 @@ class AdminControllerIT extends AbstractIntegrationTest {
         // Login as admin
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.ADMIN_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.ADMIN_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -99,7 +99,7 @@ class AdminControllerIT extends AbstractIntegrationTest {
         // Login as admin
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.ADMIN_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.ADMIN_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -120,7 +120,7 @@ class AdminControllerIT extends AbstractIntegrationTest {
         // Login as admin
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.ADMIN_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.ADMIN_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -131,7 +131,7 @@ class AdminControllerIT extends AbstractIntegrationTest {
         httpHeaders.setBearerAuth(loginResponse.token());
 
         // Update OTP config
-        OtpConfig config = new OtpConfig(null, 6, 300);
+        var config = new UpdateOtpConfigRequest(6, 300);
         mockMvc.perform(put("/api/admin/otp/config")
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers(httpHeaders)
@@ -151,7 +151,7 @@ class AdminControllerIT extends AbstractIntegrationTest {
         // Login as regular user
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
+                .content(objectMapper.writeValueAsString(TestData.USER_LOGIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 

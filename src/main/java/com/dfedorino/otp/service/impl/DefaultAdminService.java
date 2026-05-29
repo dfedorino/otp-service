@@ -1,5 +1,6 @@
 package com.dfedorino.otp.service.impl;
 
+import com.dfedorino.otp.controller.dto.UpdateOtpConfigRequest;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.OtpConfig;
 import com.dfedorino.otp.repository.OtpConfigRepository;
@@ -32,9 +33,13 @@ public class DefaultAdminService implements AdminService {
 
     @Override
     @Transactional
-    public OtpConfig updateOtpConfig(OtpConfig config) {
+    public OtpConfig updateOtpConfig(UpdateOtpConfigRequest updateOtpConfigRequest) {
         // Note: config validation might be added here in practice but not required per task
-        otpConfigRepository.update(config);
+        otpConfigRepository.update(new OtpConfig(
+            1L,
+            updateOtpConfigRequest.codeLength(),
+            updateOtpConfigRequest.ttlSeconds()
+        ));
         return otpConfigRepository.findFirst()
             .orElseThrow();
     }

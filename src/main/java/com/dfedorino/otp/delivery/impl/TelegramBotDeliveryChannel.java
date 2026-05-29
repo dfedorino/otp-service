@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TelegramBotDeliveryChannel implements DeliveryChannel {
     private final String telegramBaseUrl;
-    public static final String BOT_SEND_MESSAGE_PATH = "/" + System.getProperty("BOT_TOKEN", System.getenv("BOT_TOKEN")) + "/sendMessage";
+    public static final String BOT_SEND_MESSAGE_PATH = "/bot" + System.getProperty("BOT_TOKEN", System.getenv("BOT_TOKEN")) + "/sendMessage";
     public static final String TELEGRAM_CHAT_ID = System.getProperty("BOT_CHAT_ID", System.getenv("BOT_CHAT_ID"));
 
     public TelegramBotDeliveryChannel(String telegramBaseUrl) {
@@ -32,6 +32,8 @@ public class TelegramBotDeliveryChannel implements DeliveryChannel {
             telegramBaseUrl + BOT_SEND_MESSAGE_PATH,
             TELEGRAM_CHAT_ID,
             urlEncode(message));
+
+        log.debug(">> final url: {}", url);
 
         // 3. Передаём готовый URL в метод отправки запроса
         sendTelegramRequest(url);

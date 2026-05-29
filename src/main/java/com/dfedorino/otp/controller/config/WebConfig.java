@@ -1,6 +1,8 @@
 package com.dfedorino.otp.controller.config;
 
 import com.dfedorino.otp.controller.auth.annotation.RoleInterceptor;
+import com.dfedorino.otp.controller.auth.filter.JwtFilter;
+import com.dfedorino.otp.service.JwtService;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -29,5 +31,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new RoleInterceptor());
+    }
+
+    @Bean(name = "jwtFilter")
+    public JwtFilter jwtFilter(
+        JwtService jwtService,
+        ObjectMapper objectMapper
+    ) {
+        return new JwtFilter(jwtService, objectMapper);
     }
 }

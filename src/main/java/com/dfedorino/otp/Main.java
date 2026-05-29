@@ -1,11 +1,8 @@
 package com.dfedorino.otp;
 
-import com.dfedorino.otp.controller.auth.filter.JwtFilter;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
-import com.dfedorino.otp.service.JwtService;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.controller.config.WebConfig;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterRegistration;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
@@ -13,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
 
 @Slf4j
@@ -41,11 +39,10 @@ public class Main implements WebApplicationInitializer {
         servlet.addMapping("/");
 
         FilterRegistration.Dynamic jwtFilter =
-            servletContext.addFilter("jwtFilter",
-                new JwtFilter(
-                    context.getBean(JwtService.class),
-                    context.getBean(ObjectMapper.class)
-                ));
+            servletContext.addFilter(
+                "jwtFilter",
+                new DelegatingFilterProxy("jwtFilter")
+            );
 
         jwtFilter.addMappingForUrlPatterns(null, false, "/api/*");
     }
