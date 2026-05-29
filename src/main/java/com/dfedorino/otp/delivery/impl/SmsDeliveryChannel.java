@@ -26,7 +26,7 @@ public class SmsDeliveryChannel implements DeliveryChannel {
         this.host = properties.getProperty("smpp.host", "localhost");
         this.port = Integer.parseInt(properties.getProperty("smpp.port", "2775"));
         this.systemId = properties.getProperty("smpp.system_id", "smppclient1");
-        this.password = properties.getProperty("smpp.password", "password");
+        this.password = System.getProperty("SMPP_PASSWORD", System.getenv("SMPP_PASSWORD"));
         this.systemType = properties.getProperty("smpp.system_type", "OTP");
         this.sourceAddress = properties.getProperty("smpp.source_addr", "OTPService");
         

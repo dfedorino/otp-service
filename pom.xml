@@ -38,6 +38,7 @@
         <greenmail.version>2.1.8</greenmail.version>
         <hamcrest.version>3.0</hamcrest.version>
         <smpp-server-mock-core.version>1.5.0</smpp-server-mock-core.version>
+        <wiremock.version>3.13.2</wiremock.version>
     </properties>
 
     <dependencyManagement>
@@ -225,6 +226,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock</artifactId>
+            <version>${wiremock.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
             <version>${json-path.version}</version>
@@ -300,6 +308,11 @@
                         <POSTGRES_PASSWORD>${POSTGRES_PASSWORD}</POSTGRES_PASSWORD>
                         <POSTGRES_DB>${POSTGRES_DB}</POSTGRES_DB>
                         <POOL_SIZE>5</POOL_SIZE>
+                        <BOT_TOKEN>BOT_TOKEN</BOT_TOKEN>
+                        <BOT_CHAT_ID>12345</BOT_CHAT_ID>
+                        <JWT_SECRET>JWT_SECRET</JWT_SECRET>
+                        <EMAIL_PASSWORD>EMAIL_PASSWORD</EMAIL_PASSWORD>
+                        <SMPP_PASSWORD>SMPP_PASSWORD</SMPP_PASSWORD>
                     </environmentVariables>
                 </configuration>
 

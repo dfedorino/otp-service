@@ -1,5 +1,10 @@
 package com.dfedorino.otp.controller;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,6 +20,7 @@ import com.dfedorino.otp.controller.dto.ValidateOtpRequest;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.delivery.impl.EmailDeliveryChannel;
 import com.dfedorino.otp.delivery.impl.SmsDeliveryChannel;
+import com.dfedorino.otp.delivery.impl.TelegramBotDeliveryChannel;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.service.JwtService;
 import com.dfedorino.otp.service.config.ServiceConfig;
@@ -25,18 +31,21 @@ import com.dfedorino.otp.util.ApplicationPropertiesUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.mikesafonov.smpp.assertj.SmppAssertions;
 import com.github.mikesafonov.smpp.server.MockSmppServer;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetup;
 import jakarta.mail.internet.InternetAddress;
 import java.util.List;
 import java.util.Properties;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockServletContext;
@@ -45,10 +54,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
-@Slf4j
+@WireMockTest(httpPort = 8089)
 class UserControllerIT extends AbstractIntegrationTest {
 
-    private static final Properties props = ApplicationPropertiesUtil.loadApplicationProperties();
+    private static final Properties PROPS = ApplicationPropertiesUtil.loadApplicationProperties();
 
     private AnnotationConfigWebApplicationContext context;
     private MockMvc mockMvc;
@@ -57,7 +66,7 @@ class UserControllerIT extends AbstractIntegrationTest {
     @RegisterExtension
     static GreenMailExtension GREEN_MAIL = new GreenMailExtension(ServerSetup.SMTP);
 
-    private static final MockSmppServer MOCK_SMPP_SERVER = new MockSmppServer(2775, props.getProperty("smpp.system_id"), "password");
+    private static final MockSmppServer MOCK_SMPP_SERVER = new MockSmppServer(2775, PROPS.getProperty("smpp.system_id"), "password");
 
     @BeforeAll
     static void setupClass() {
@@ -67,6 +76,14 @@ class UserControllerIT extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         context = new AnnotationConfigWebApplicationContext();
+
+        ConfigurableEnvironment env = context.getEnvironment();
+        MutablePropertySources sources = env.getPropertySources();
+
+        Properties overrideProps = new Properties();
+        overrideProps.setProperty("telegram.api.base-url", "http://localhost:8089");
+        sources.addFirst(new PropertiesPropertySource("testOverride", overrideProps));
+
         context.setServletContext(new MockServletContext());
         context.register(WebConfig.class, ServiceConfig.class, RepositoryConfig.class);
         context.refresh();
@@ -77,6 +94,10 @@ class UserControllerIT extends AbstractIntegrationTest {
             .webAppContextSetup(context)
             .addFilter(new JwtFilter(context.getBean(JwtService.class), objectMapper))
             .build();
+
+        stubFor(get(anyUrl())
+            .withQueryParam("chat_id", equalTo(TelegramBotDeliveryChannel.TELEGRAM_CHAT_ID))
+            .willReturn(ok("Delivered!")));
     }
 
     @AfterEach
@@ -125,7 +146,6 @@ class UserControllerIT extends AbstractIntegrationTest {
             .andReturn();
 
         String responseContent = result.getResponse().getContentAsString();
-        log.debug("response: {}", responseContent);
 
         var otpCodeDto =
             objectMapper.readValue(responseContent, OtpCodeDto.class);
@@ -137,7 +157,7 @@ class UserControllerIT extends AbstractIntegrationTest {
             .hasSize(1)
             .first()
             .satisfies(message -> {
-                assertThat(message.getFrom()).containsOnly(new InternetAddress(props.getProperty("email.from")));
+                assertThat(message.getFrom()).containsOnly(new InternetAddress(PROPS.getProperty("email.from")));
                 assertThat(message.getAllRecipients()).containsOnly(new InternetAddress(user.login()));
                 assertThat(message.getSubject()).isEqualTo(EmailDeliveryChannel.SUBJECT);
                 assertThat(message.getContent()).isEqualTo(EmailDeliveryChannel.PREFIX + otpCodeDto.code());
@@ -147,7 +167,7 @@ class UserControllerIT extends AbstractIntegrationTest {
             .hasSingleMessage()
             .hasDest(TestData.USER_REQUEST.phoneNumber())
             .hasText(SmsDeliveryChannel.PREFIX + otpCodeDto.code())
-            .hasSource(props.getProperty("smpp.source_addr"));
+            .hasSource(PROPS.getProperty("smpp.source_addr"));
     }
 
     @Test
@@ -201,12 +221,9 @@ class UserControllerIT extends AbstractIntegrationTest {
     @Test
     void should_reject_otp_generation_for_nonexistent_user() throws Exception {
         // First create a user
-        MvcResult mvcResult = mockMvc.perform(post("/api/auth")
+        mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
-            .andReturn();
-
-        var user = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), UserDto.class);
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)));
 
         // Login
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")

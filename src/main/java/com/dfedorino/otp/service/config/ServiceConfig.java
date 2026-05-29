@@ -33,7 +33,7 @@ public class ServiceConfig {
 
     @Bean
     public DefaultJwtService jwtService() {
-        String jwtSecret = props.getProperty("jwt.secret");
+        String jwtSecret = System.getProperty("JWT_SECRET", System.getenv("JWT_SECRET"));
         long jwtExpiration = Long.parseLong(props.getProperty("jwt.expiration.seconds"));
         return new DefaultJwtService(jwtSecret, jwtExpiration);
     }

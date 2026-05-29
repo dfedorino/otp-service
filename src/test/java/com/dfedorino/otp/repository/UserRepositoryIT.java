@@ -6,7 +6,6 @@ import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.domain.model.User;
 import com.dfedorino.otp.repository.utils.Queries;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

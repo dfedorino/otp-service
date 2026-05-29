@@ -23,7 +23,7 @@ public class EmailDeliveryChannel implements DeliveryChannel {
     public EmailDeliveryChannel(Properties properties) {
         // Load configuration
         this.username = properties.getProperty("email.username");
-        this.password = properties.getProperty("email.password");
+        this.password = System.getProperty("EMAIL_PASSWORD", System.getenv("EMAIL_PASSWORD"));
         this.fromEmail = properties.getProperty("email.from");
         this.session = Session.getInstance(properties, new Authenticator() {
             @Override

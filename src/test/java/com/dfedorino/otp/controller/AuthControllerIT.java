@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -146,40 +145,6 @@ class AuthControllerIT extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isUnauthorized())
-            .andDo(print());
-    }
-
-    @Test
-    void should_allow_otp_code_creation_with_token() throws Exception {
-        // Register user
-        MvcResult registerUserMvcResult = mockMvc.perform(post("/api/auth")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        UserDto userDto = objectMapper.readValue(registerUserMvcResult.getResponse().getContentAsString(), UserDto.class);
-
-        // Login user
-        MvcResult mvcResult = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        String responseContent = mvcResult.getResponse().getContentAsString();
-        LoginResponse response = objectMapper.readValue(responseContent, LoginResponse.class);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth(response.token());
-
-        // Create OTP
-        var otpRequest = new OtpRequest(userDto.id(), "operationId");
-        mockMvc.perform(post("/api/users/otp/generate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .headers(httpHeaders)
-                .content(objectMapper.writeValueAsString(otpRequest)))
-            .andExpect(status().isOk())
             .andDo(print());
     }
 }
