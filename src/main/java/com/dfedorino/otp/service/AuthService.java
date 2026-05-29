@@ -7,6 +7,7 @@ public interface AuthService {
 
     User register(
         String login,
+        String phoneNumber,
         String password,
         Role role
     );

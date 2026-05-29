@@ -28,8 +28,8 @@ public class AuthController {
 
     @PostMapping
     public UserDto createUser(@RequestBody UserRequest request) {
-        var created = authService.register(request.login(), request.password(), Role.USER);
-        return new UserDto(created.id(), created.login(), created.role());
+        var created = authService.register(request.login(), request.phoneNumber(), request.password(), Role.USER);
+        return new UserDto(created.id(), created.login(), created.phoneNumber(), created.role());
     }
 
     @PostMapping("/login")

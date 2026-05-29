@@ -54,7 +54,7 @@ class UserServiceIT extends AbstractIntegrationTest {
     void should_generate_otp_with_default_otp_config() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", Role.USER);
+            userRepository.save("test@example.com", "", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();
@@ -83,7 +83,7 @@ class UserServiceIT extends AbstractIntegrationTest {
         // Arrange - Insert one USER user
         
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", Role.USER);
+            userRepository.save("test@example.com", "", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();
@@ -111,7 +111,7 @@ class UserServiceIT extends AbstractIntegrationTest {
     void should_validate_active_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", Role.USER);
+            userRepository.save("test@example.com", "", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();
@@ -135,7 +135,7 @@ class UserServiceIT extends AbstractIntegrationTest {
     void should_reject_invalid_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", Role.USER);
+            userRepository.save("test@example.com", "", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();
@@ -152,7 +152,7 @@ class UserServiceIT extends AbstractIntegrationTest {
     void should_reject_expired_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", Role.USER);
+            userRepository.save("test@example.com", "", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();
@@ -193,7 +193,7 @@ class UserServiceIT extends AbstractIntegrationTest {
     void should_reject_reused_otp() {
         // Arrange - Insert one USER user
         long userId = tx.execute(() -> {
-            userRepository.save("test@example.com", "hashedPassword", Role.USER);
+            userRepository.save("test@example.com", "", "hashedPassword", Role.USER);
             Optional<User> found = userRepository.findByLogin("test@example.com");
             assertThat(found).isPresent();
             return found.get().id();

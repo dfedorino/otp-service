@@ -12,25 +12,26 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JdbcUserRepository implements UserRepository {
 
-    private static final String INSERT_USER = "INSERT INTO users (login, password, role) VALUES (?, ?, ?)";
-    private static final String SELECT_BY_LOGIN = "SELECT id, login, password, role FROM users WHERE login = ?";
-    private static final String SELECT_BY_ID = "SELECT id, login, password, role FROM users WHERE id = ?";
+    private static final String INSERT_USER = "INSERT INTO users (login, phone_number, password, role) VALUES (?, ?, ?, ?)";
+    private static final String SELECT_BY_LOGIN = "SELECT id, login, phone_number, password, role FROM users WHERE login = ?";
+    private static final String SELECT_BY_ID = "SELECT id, login, phone_number, password, role FROM users WHERE id = ?";
     private static final String DELETE_BY_ID = "DELETE FROM users WHERE id = ?";
     private static final String SELECT_ADMIN_EXISTS = "SELECT EXISTS(SELECT 1 FROM users WHERE role = 'ADMIN')";
-    private static final String SELECT_ALL_USERS = "SELECT id, login, password, role FROM users";
+    private static final String SELECT_ALL_USERS = "SELECT id, login, phone_number, password, role FROM users";
 
     private static final ResultSetMapper<User> USER_RESULT_SET_MAPPER = rs -> new User(
         rs.getLong("id"),
         rs.getString("login"),
+        rs.getString("phone_number"),
         rs.getString("password"),
         Role.valueOf(rs.getString("role"))
     );
 
     @Override
-    public boolean save(String login, String hashedPassword, Role role) {
-        log.debug("Creating user with login: {}, hashedPassword: {}, role: {}",
-            login, hashedPassword, role);
-        return Queries.update(INSERT_USER, login, hashedPassword, role.name()) > 0;
+    public boolean save(String login, String phoneNumber, String hashedPassword, Role role) {
+        log.debug("Creating user with login: {}, phone_number: {}, hashedPassword: {}, role: {}",
+            login, phoneNumber, hashedPassword, role);
+        return Queries.update(INSERT_USER, login, phoneNumber, hashedPassword, role.name()) > 0;
     }
 
     @Override
@@ -56,7 +57,7 @@ public class JdbcUserRepository implements UserRepository {
         log.debug("Checking if admin user exists");
         return Queries.query(SELECT_ADMIN_EXISTS, rs -> rs.getBoolean(1)).stream().findAny().orElse(false);
     }
-    
+
     @Override
     public List<User> findAll() {
         log.debug("Retrieving all users");

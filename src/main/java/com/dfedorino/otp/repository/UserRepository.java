@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface UserRepository {
 
-    boolean save(String login, String hashedPassword, Role role);
+    boolean save(String login, String phoneNumber, String hashedPassword, Role role);
 
     Optional<User> findByLogin(String login);
 
@@ -16,6 +16,6 @@ public interface UserRepository {
     boolean deleteById(long id);
 
     boolean existsAdmin();
-    
+
     List<User> findAll();
 }

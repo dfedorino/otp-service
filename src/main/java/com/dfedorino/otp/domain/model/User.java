@@ -5,6 +5,7 @@ import com.dfedorino.otp.domain.enums.Role;
 public record User(
     Long id,
     String login,
+    String phoneNumber,
     String hashedPassword,
     Role role
 ) {

@@ -8,10 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.dfedorino.otp.common.TestData;
 import com.dfedorino.otp.controller.dto.LoginResponse;
 import com.dfedorino.otp.controller.dto.OtpRequest;
-import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.controller.auth.filter.JwtFilter;
+import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.domain.enums.Role;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
@@ -61,13 +62,11 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
     @Test
     void should_create_user_successfully() throws Exception {
-        UserRequest request = new UserRequest("testuser", "password123");
-
         MvcResult result = mockMvc.perform(post("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.login").value("testuser"))
+            .andExpect(jsonPath("$.login").value(TestData.USER_REQUEST.login()))
             .andExpect(jsonPath("$.role").value("USER"))
             .andReturn();
 
@@ -75,21 +74,19 @@ class AuthControllerIT extends AbstractIntegrationTest {
         UserDto userDto = objectMapper.readValue(responseContent, UserDto.class);
 
         assertThat(userDto.id()).isNotNull();
-        assertThat(userDto.login()).isEqualTo("testuser");
+        assertThat(userDto.login()).isEqualTo(TestData.USER_REQUEST.login());
         assertThat(userDto.role()).isEqualTo(Role.USER);
     }
 
     @Test
     void should_login_successfully() throws Exception {
-        UserRequest registerRequest = new UserRequest("testuser", "password123");
         mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(registerRequest)));
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)));
 
-        UserRequest loginRequest = new UserRequest("testuser", "password123");
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists())
             .andReturn();
@@ -102,14 +99,13 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
     @Test
     void should_reject_duplicate_login() throws Exception {
-        UserRequest request = new UserRequest("testuser", "password123");
         mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(request)));
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)));
 
         MvcResult result = mockMvc.perform(post("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new UserRequest("testuser", "newpass"))))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isConflict())
             .andReturn();
 
@@ -119,14 +115,13 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
     @Test
     void should_reject_login_for_invalid_password() throws Exception {
-        UserRequest registerRequest = new UserRequest("testuser", "correctpass");
         mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(registerRequest)));
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)));
 
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new UserRequest("testuser", "wrongpass"))))
+                .content(objectMapper.writeValueAsString(new UserRequest(TestData.USER_REQUEST.login(), TestData.USER_REQUEST.phoneNumber(), "wrongpass"))))
             .andExpect(status().isUnauthorized())
             .andReturn();
 
@@ -136,10 +131,9 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
     @Test
     void should_reject_login_for_unknown_user() throws Exception {
-        UserRequest request = new UserRequest("unknown", "password123");
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isNotFound())
             .andExpect(content().string(containsString("User not found")));
     }
@@ -157,12 +151,10 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
     @Test
     void should_allow_otp_code_creation_with_token() throws Exception {
-        UserRequest request = new UserRequest("testuser", "password123");
-
         // Register user
         MvcResult registerUserMvcResult = mockMvc.perform(post("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -171,7 +163,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
         // Login user
         MvcResult mvcResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 

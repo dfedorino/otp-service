@@ -38,9 +38,9 @@ class AdminServiceIT extends AbstractIntegrationTest {
     void should_return_only_non_admin_users() {
         // Arrange
         tx.executeWithoutResult(() -> {
-            userRepository.save("admin1", "hashed", Role.ADMIN);
-            userRepository.save("user1", "hashed", Role.USER);
-            userRepository.save("user2", "hashed", Role.USER);
+            userRepository.save("admin1", "", "hashed", Role.ADMIN);
+            userRepository.save("user1", "", "hashed", Role.USER);
+            userRepository.save("user2", "", "hashed", Role.USER);
         });
 
         // Act
@@ -56,7 +56,7 @@ class AdminServiceIT extends AbstractIntegrationTest {
     void should_delete_user_and_otp_codes() {
         // Arrange
         long userId = tx.execute(() -> {
-            userRepository.save("testuser", "hashed", Role.USER);
+            userRepository.save("testuser", "", "hashed", Role.USER);
             return userRepository.findByLogin("testuser")
                 .orElseThrow()
                 .id();

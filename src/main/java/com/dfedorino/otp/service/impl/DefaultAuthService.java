@@ -23,6 +23,7 @@ public class DefaultAuthService implements AuthService {
     @Transactional
     public User register(
         String login,
+        String phoneNumber,
         String password,
         Role role
     ) {
@@ -30,38 +31,38 @@ public class DefaultAuthService implements AuthService {
         if (login == null || login.trim().isEmpty()) {
             throw new IllegalArgumentException("Login cannot be null or empty");
         }
-        
+
         // Validate password
         if (password == null || password.isEmpty()) {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
-        
+
         // Check for duplicate logins
         Optional<User> existingUser = userRepository.findByLogin(login);
         if (existingUser.isPresent()) {
             throw new LoginAlreadyExists("Login already exists");
         }
-        
+
         // If role == ADMIN, check if admin already exists
         if (role == Role.ADMIN && userRepository.existsAdmin()) {
             throw new AdminAlreadyExists("Administrator already exists");
         }
-        
+
         // Hash password
         String hashedPassword = PasswordUtil.hash(password);
-        
+
         // Save user
-        boolean saved = userRepository.save(login, hashedPassword, role);
+        boolean saved = userRepository.save(login, phoneNumber, hashedPassword, role);
         if (!saved) {
             throw new IllegalStateException("Failed to save user");
         }
-        
+
         // Retrieve persisted user
         Optional<User> persistedUser = userRepository.findByLogin(login);
         if (persistedUser.isEmpty()) {
             throw new IllegalStateException("Failed to retrieve saved user");
         }
-        
+
         return persistedUser.get();
     }
     

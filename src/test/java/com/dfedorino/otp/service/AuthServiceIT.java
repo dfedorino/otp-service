@@ -39,6 +39,7 @@ class AuthServiceIT extends AbstractIntegrationTest {
         // Act
         User user = authService.register(
             "john",
+            "phoneNumber",
             "password123",
             Role.USER
         );
@@ -78,6 +79,7 @@ class AuthServiceIT extends AbstractIntegrationTest {
         assertThatThrownBy(() ->
             authService.register(
                 "admin2",
+                "phoneNumber",
                 "password123",
                 Role.ADMIN
             )
@@ -92,6 +94,7 @@ class AuthServiceIT extends AbstractIntegrationTest {
         // Arrange - Register first user
         authService.register(
             "john",
+            "phoneNumber",
             "password123",
             Role.USER
         );
@@ -100,6 +103,7 @@ class AuthServiceIT extends AbstractIntegrationTest {
         assertThatThrownBy(() ->
             authService.register(
                 "john",
+                "phoneNumber",
                 "another-password",
                 Role.USER
             )
@@ -114,6 +118,7 @@ class AuthServiceIT extends AbstractIntegrationTest {
         // Arrange - Register user
         authService.register(
             "john",
+            "phoneNumber",
             "password123",
             Role.USER
         );
@@ -157,6 +162,7 @@ class AuthServiceIT extends AbstractIntegrationTest {
         // Arrange - Register user
         authService.register(
             "john",
+            "phoneNumber",
             "correct-password",
             Role.USER
         );

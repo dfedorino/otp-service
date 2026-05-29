@@ -1,13 +1,14 @@
 CREATE TABLE IF NOT EXISTS users
 (
-    id       BIGSERIAL PRIMARY KEY,
-    login    VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    "role"   VARCHAR(5)   NOT NULL -- IN ('ADMIN', 'USER')
+    id           BIGSERIAL PRIMARY KEY,
+    login        VARCHAR(255) NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
+    password     VARCHAR(255) NOT NULL,
+    "role"       VARCHAR(5)   NOT NULL -- IN ('ADMIN', 'USER')
 );
 
-INSERT INTO users (login, password, "role")
-VALUES ('admin', '$2a$04$i0o7w7IQsZQuuGL..Z6G9uGbG.PzrwKUAMkfA8pxs355ZgwQpfNIi', 'ADMIN');
+INSERT INTO users (login, phone_number, password, "role")
+VALUES ('admin', '+79111234567', '$2a$04$i0o7w7IQsZQuuGL..Z6G9uGbG.PzrwKUAMkfA8pxs355ZgwQpfNIi', 'ADMIN');
 
 CREATE TABLE IF NOT EXISTS otp_config
 (

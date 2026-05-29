@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.dfedorino.otp.common.TestData;
 import com.dfedorino.otp.controller.dto.LoginResponse;
-import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.controller.auth.filter.JwtFilter;
 import com.dfedorino.otp.domain.model.OtpConfig;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
@@ -62,10 +62,9 @@ class AdminControllerIT extends AbstractIntegrationTest {
     @Test
     void should_get_users_successfully() throws Exception {
         // Login as admin
-        UserRequest loginRequest = new UserRequest("admin", "admin");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.ADMIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -76,10 +75,9 @@ class AdminControllerIT extends AbstractIntegrationTest {
         httpHeaders.setBearerAuth(loginResponse.token());
 
         // Create regular user
-        UserRequest userRequest = new UserRequest("testuser", "password123");
         mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequest)));
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)));
 
         // Test getting users
         mockMvc.perform(get("/api/admin/users")
@@ -94,16 +92,14 @@ class AdminControllerIT extends AbstractIntegrationTest {
     @Test
     void should_delete_user_successfully() throws Exception {
         // Create a regular user to delete
-        UserRequest userRequest = new UserRequest("testuser", "password123");
         mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequest)));
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)));
 
         // Login as admin
-        UserRequest loginRequest = new UserRequest("admin", "admin");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.ADMIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -122,10 +118,9 @@ class AdminControllerIT extends AbstractIntegrationTest {
     @Test
     void should_update_otp_config_successfully() throws Exception {
         // Login as admin
-        UserRequest loginRequest = new UserRequest("admin", "admin");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.ADMIN_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -149,16 +144,14 @@ class AdminControllerIT extends AbstractIntegrationTest {
     @Test
     void should_reject_access_for_non_admin_user() throws Exception {
         // Create a regular user
-        UserRequest userRequest = new UserRequest("regularuser", "password123");
         mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequest)));
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)));
 
         // Login as regular user
-        UserRequest loginRequest = new UserRequest("regularuser", "password123");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 

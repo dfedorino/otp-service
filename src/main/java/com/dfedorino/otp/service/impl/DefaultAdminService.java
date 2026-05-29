@@ -25,7 +25,7 @@ public class DefaultAdminService implements AdminService {
         return userRepository.findAll()
             .stream()
             .filter(user -> user.role() != Role.ADMIN)
-            .map(user -> new UserDto(user.id(), user.login(), user.role()))
+            .map(user -> new UserDto(user.id(), user.login(), user.phoneNumber(), user.role()))
             .collect(Collectors.toList());
     }
 

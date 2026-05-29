@@ -7,13 +7,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.dfedorino.otp.common.TestData;
 import com.dfedorino.otp.controller.auth.filter.JwtFilter;
 import com.dfedorino.otp.controller.dto.LoginResponse;
 import com.dfedorino.otp.controller.dto.OtpRequest;
-import com.dfedorino.otp.controller.dto.UserRequest;
 import com.dfedorino.otp.controller.dto.ValidateOtpRequest;
 import com.dfedorino.otp.common.AbstractIntegrationTest;
 import com.dfedorino.otp.delivery.impl.EmailDeliveryChannel;
+import com.dfedorino.otp.delivery.impl.SmsDeliveryChannel;
 import com.dfedorino.otp.repository.config.RepositoryConfig;
 import com.dfedorino.otp.service.JwtService;
 import com.dfedorino.otp.service.config.ServiceConfig;
@@ -22,13 +23,17 @@ import com.dfedorino.otp.service.dto.OtpCodeDto;
 import com.dfedorino.otp.service.dto.UserDto;
 import com.dfedorino.otp.util.ApplicationPropertiesUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.mikesafonov.smpp.assertj.SmppAssertions;
+import com.github.mikesafonov.smpp.server.MockSmppServer;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetup;
 import jakarta.mail.internet.InternetAddress;
 import java.util.List;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,14 +47,22 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 
 @Slf4j
 class UserControllerIT extends AbstractIntegrationTest {
-    private final Properties props = ApplicationPropertiesUtil.loadApplicationProperties();
+
+    private static final Properties props = ApplicationPropertiesUtil.loadApplicationProperties();
 
     private AnnotationConfigWebApplicationContext context;
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @RegisterExtension
-    static GreenMailExtension greenMail = new GreenMailExtension(ServerSetup.SMTP);
+    static GreenMailExtension GREEN_MAIL = new GreenMailExtension(ServerSetup.SMTP);
+
+    private static final MockSmppServer MOCK_SMPP_SERVER = new MockSmppServer(2775, props.getProperty("smpp.system_id"), "password");
+
+    @BeforeAll
+    static void setupClass() {
+        MOCK_SMPP_SERVER.start();
+    }
 
     @BeforeEach
     void setUp() {
@@ -71,23 +84,26 @@ class UserControllerIT extends AbstractIntegrationTest {
         context.close();
     }
 
+    @AfterAll
+    public static void tearDownClass() {
+        MOCK_SMPP_SERVER.stop();
+    }
+
     @Test
     void should_generate_otp_successfully() throws Exception {
         // First create a user
-        var userRequest = new UserRequest("dfedorino@gmail.com", "password123");
         MvcResult registrationMvcResult = mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequest)))
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andReturn();
 
         String userResponseContent = registrationMvcResult.getResponse().getContentAsString();
         UserDto user = objectMapper.readValue(userResponseContent, UserDto.class);
 
         // Then login
-        UserRequest loginRequest = new UserRequest(user.login(), "password123");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -117,7 +133,7 @@ class UserControllerIT extends AbstractIntegrationTest {
         assertThat(otpCodeDto.code()).isNotBlank();
         assertThat(otpCodeDto.status()).isNotNull();
 
-        assertThat(List.of(greenMail.getReceivedMessages()))
+        assertThat(List.of(GREEN_MAIL.getReceivedMessages()))
             .hasSize(1)
             .first()
             .satisfies(message -> {
@@ -126,24 +142,28 @@ class UserControllerIT extends AbstractIntegrationTest {
                 assertThat(message.getSubject()).isEqualTo(EmailDeliveryChannel.SUBJECT);
                 assertThat(message.getContent()).isEqualTo(EmailDeliveryChannel.PREFIX + otpCodeDto.code());
             });
+
+        SmppAssertions.assertThat(MOCK_SMPP_SERVER)
+            .hasSingleMessage()
+            .hasDest(TestData.USER_REQUEST.phoneNumber())
+            .hasText(SmsDeliveryChannel.PREFIX + otpCodeDto.code())
+            .hasSource(props.getProperty("smpp.source_addr"));
     }
 
     @Test
     void should_validate_valid_otp() throws Exception {
         // First create a user
-        var userRequest = new UserRequest("testuser", "password123");
         MvcResult mvcResult = mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequest)))
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andReturn();
 
         var userDto = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), UserDto.class);
 
         // Then login
-        UserRequest loginRequest = new UserRequest("testuser", "password123");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -181,16 +201,17 @@ class UserControllerIT extends AbstractIntegrationTest {
     @Test
     void should_reject_otp_generation_for_nonexistent_user() throws Exception {
         // First create a user
-        var userRequest = new UserRequest("testuser", "password123");
-        mockMvc.perform(post("/api/auth")
+        MvcResult mvcResult = mockMvc.perform(post("/api/auth")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(userRequest)));
+            .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
+            .andReturn();
+
+        var user = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), UserDto.class);
 
         // Login
-        UserRequest loginRequest = new UserRequest("testuser", "password123");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(TestData.USER_REQUEST)))
             .andExpect(status().isOk())
             .andReturn();
 

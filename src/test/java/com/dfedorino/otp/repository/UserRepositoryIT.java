@@ -24,6 +24,7 @@ class UserRepositoryIT extends AbstractIntegrationTest {
         tx.executeWithoutResult(() -> {
             assertThat(userRepository.save(
                 "login",
+                "",
                 "hashedPassword",
                 Role.USER
             )).isTrue();
@@ -44,6 +45,7 @@ class UserRepositoryIT extends AbstractIntegrationTest {
         tx.executeWithoutResult(() -> {
             assertThat(userRepository.save(
                 "login",
+                "",
                 "hashedPassword",
                 Role.USER
             )).isTrue();
@@ -75,12 +77,14 @@ class UserRepositoryIT extends AbstractIntegrationTest {
             Queries.update("DELETE FROM users WHERE login = 'admin'");
             assertThat(userRepository.save(
                 "user1",
+                "",
                 "hashedPassword",
                 Role.USER
             )).isTrue();
             
             assertThat(userRepository.save(
                 "user2",
+                "",
                 "hashedPassword",
                 Role.USER
             )).isTrue();
@@ -100,18 +104,21 @@ class UserRepositoryIT extends AbstractIntegrationTest {
             // Arrange
             assertThat(userRepository.save(
                 "user1",
+                "",
                 "hashedPassword",
                 Role.USER
             )).isTrue();
             
             assertThat(userRepository.save(
                 "user2",
+                "",
                 "hashedPassword",
                 Role.USER
             )).isTrue();
             
             assertThat(userRepository.save(
                 "user3",
+                "",
                 "hashedPassword",
                 Role.USER
             )).isTrue();

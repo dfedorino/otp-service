@@ -55,6 +55,7 @@ public class DefaultUserService implements UserService {
                 new UserDto(
                     userOptional.get().id(),
                     userOptional.get().login(),
+                    userOptional.get().phoneNumber(),
                     userOptional.get().role()
                 ), otpCodeDto));
 
