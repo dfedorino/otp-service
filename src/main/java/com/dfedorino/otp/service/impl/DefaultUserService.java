@@ -11,6 +11,7 @@ import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.service.UserService;
 import com.dfedorino.otp.repository.transaction.Transactional;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
+import com.dfedorino.otp.service.dto.UserDto;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,7 +51,12 @@ public class DefaultUserService implements UserService {
             expiresAt);
 
         deliveryChannels.forEach(
-            deliveryChannel -> deliveryChannel.deliver(userOptional.get(), otpCodeDto));
+            deliveryChannel -> deliveryChannel.deliver(
+                new UserDto(
+                    userOptional.get().id(),
+                    userOptional.get().login(),
+                    userOptional.get().role()
+                ), otpCodeDto));
 
         return otpCodeDto;
     }

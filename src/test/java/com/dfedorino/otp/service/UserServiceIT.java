@@ -12,6 +12,7 @@ import com.dfedorino.otp.repository.OtpRepository;
 import com.dfedorino.otp.repository.UserRepository;
 import com.dfedorino.otp.service.config.ServiceConfig;
 import com.dfedorino.otp.service.dto.OtpCodeDto;
+import com.dfedorino.otp.service.dto.UserDto;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -73,7 +74,8 @@ class UserServiceIT extends AbstractIntegrationTest {
         assertThat(otp.expiresAt()).isAfter(now);
         assertThat(otp.expiresAt()).isBefore(now.plusSeconds(310)); // Allow some tolerance
 
-        verify(deliveryChannel).deliver(any(User.class), any(OtpCodeDto.class));
+        verify(deliveryChannel).deliver(any(UserDto.class), any(OtpCodeDto.class));
+
     }
     
     @Test
@@ -102,7 +104,7 @@ class UserServiceIT extends AbstractIntegrationTest {
         assertThat(otp1.code()).isNotEqualTo(otp3.code());
         assertThat(otp2.code()).isNotEqualTo(otp3.code());
 
-        verify(deliveryChannel, times(3)).deliver(any(User.class), any(OtpCodeDto.class));
+        verify(deliveryChannel, times(3)).deliver(any(UserDto.class), any(OtpCodeDto.class));
     }
     
     @Test
